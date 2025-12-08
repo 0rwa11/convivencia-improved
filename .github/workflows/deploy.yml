@@ -29,11 +29,15 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # --- CORRECCIÓN CLAVE: CAMBIAR EL DIRECTORIO DE TRABAJO ---
       - name: Install dependencies
         run: pnpm install
+        working-directory: ./client
 
       - name: Build
         run: pnpm run build
+        working-directory: ./client
+      # ---------------------------------------------------------
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
