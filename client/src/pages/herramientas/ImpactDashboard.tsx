@@ -152,36 +152,39 @@ export default function ImpactDashboard() {
     const beforeEvals = evaluations.filter(e => e.phase === "before");
     const afterEvals = evaluations.filter(e => e.phase === "after");
 
-    const stereotypesBefore = beforeEvals.filter(e => e.grouping === "separated").length;
-    const stereotypesAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const stereotypeReduction = beforeEvals.length > 0 && afterEvals.length > 0
-      ? Math.round(((stereotypesAfter / afterEvals.length) * 100))
-      : 65;
+    // Reducción de Estereotipos: Proxy is the percentage of 'mixed' grouping in after-evaluations
+    const mixedAfter = afterEvals.filter(e => e.grouping === "mixed").length;
+    const totalAfterGrouping = afterEvals.filter(e => e.grouping).length;
+    const stereotypeReduction = totalAfterGrouping > 0
+      ? Math.round((mixedAfter / totalAfterGrouping) * 100)
+      : 0;
 
-    const empathyBefore = beforeEvals.filter(e => e.communication === "frequent").length;
-    const empathyAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const empathyIncrease = beforeEvals.length > 0 && afterEvals.length > 0
-      ? Math.round(((empathyAfter / afterEvals.length) * 100))
-      : 70;
+    // Aumento de Empatía: Proxy is the percentage of 'frequent' communication in after-evaluations
+    const frequentCommAfter = afterEvals.filter(e => e.communication === "frequent").length;
+    const totalAfterComm = afterEvals.filter(e => e.communication).length;
+    const empathyIncrease = totalAfterComm > 0
+      ? Math.round((frequentCommAfter / totalAfterComm) * 100)
+      : 0;
 
-    const communityBefore = beforeEvals.filter(e => e.grouping === "mixed").length;
-    const communityAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const communityStrength = beforeEvals.length > 0 && afterEvals.length > 0
-      ? Math.round(((communityAfter / afterEvals.length) * 100))
-      : 60;
+    // Fortalecimiento Comunitario: Proxy is the percentage of 'no tensions' in after-evaluations
+    const noTensionsAfter = afterEvals.filter(e => e.tensions === "none").length;
+    const totalAfterTensions = afterEvals.filter(e => e.tensions).length;
+    const communityStrength = totalAfterTensions > 0
+      ? Math.round((noTensionsAfter / totalAfterTensions) * 100)
+      : 0;
 
-    const participationScores = evaluations
-      .filter(e => e.phase === "during" && e.participation)
+    // Desarrollo de Habilidades: Proxy is the average 'openness' score during the program
+    const opennessScores = evaluations
+      .filter(e => e.phase === "during" && e.openness)
       .map(e => {
-        if (e.participation === "100") return 100;
-        if (e.participation === "80-99") return 90;
-        if (e.participation === "60-79") return 70;
-        return 50;
+        if (e.openness === "high") return 100;
+        if (e.openness === "medium") return 70;
+        return 30; // Low
       });
 
-    const skillsDevelopment = participationScores.length > 0
-      ? Math.round(participationScores.reduce((sum, p) => sum + p, 0) / participationScores.length)
-      : 75;
+    const skillsDevelopment = opennessScores.length > 0
+      ? Math.round(opennessScores.reduce((sum, s) => sum + s, 0) / opennessScores.length)
+      : 0;
 
     return [
       { name: "Reducción de Estereotipos", value: stereotypeReduction, color: COLORS[3] },
