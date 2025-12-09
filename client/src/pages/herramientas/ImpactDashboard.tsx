@@ -51,8 +51,9 @@ export default function ImpactDashboard() {
       ? Math.round(satisfactionScores.reduce((sum, s) => sum + s, 0) / satisfactionScores.length)
       : 0;
 
-    // Count nationalities (estimate from groups)
-    const nationalitiesCount = Math.max(sessions.length > 0 ? sessions.length + 2 : 0, 0);
+    // Count nationalities (estimated from unique groups)
+    const uniqueGroups = new Set(sessions.map(s => s.group));
+    const nationalitiesCount = uniqueGroups.size;
 
     // Calculate stereotype reduction (based on grouping improvement)
     const separatedBefore = beforeEvals.filter(e => e.grouping === "separated").length;
@@ -64,12 +65,27 @@ export default function ImpactDashboard() {
       ? Math.round(((mixedAfter / totalAfterGrouping) - (1 - separatedBefore / totalBeforeGrouping)) * 100)
       : 0;
 
-    // Calculate empathy increase (based on respect + openness)
-    const empathyBefore = beforeEvals.filter(e => e.communication === "frequent").length;
-    const empathyAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const empathyIncrease = beforeEvals.length > 0 && afterEvals.length > 0
-      ? Math.round(((empathyAfter / afterEvals.length) - (empathyBefore / beforeEvals.length)) * 100)
+    // Calculate empathy increase (based on communication and respect improvement)
+    // Empathy is a proxy for the 'respect' and 'openness' indicators in the 'during' phase
+    const avgRespectDuring = duringEvals.length > 0
+      ? duringEvals.filter(e => e.respect === "high").length / duringEvals.length
       : 0;
+    const avgOpennessDuring = duringEvals.length > 0
+      ? duringEvals.filter(e => e.openness === "high").length / duringEvals.length
+      : 0;
+    const empathyScore = Math.round(((avgRespectDuring + avgOpennessDuring) / 2) * 100);
+
+    // Use a simpler, more direct calculation for Empathy Increase for the dashboard metric
+    // Compare 'communication' (proxy for empathy) before and after
+    const frequentCommBefore = beforeEvals.filter(e => e.communication === "frequent").length;
+    const frequentCommAfter = afterEvals.filter(e => e.communication === "frequent").length;
+    const totalBeforeComm = beforeEvals.filter(e => e.communication).length;
+    const totalAfterComm = afterEvals.filter(e => e.communication).length;
+
+    const rateBefore = totalBeforeComm > 0 ? frequentCommBefore / totalBeforeComm : 0;
+    const rateAfter = totalAfterComm > 0 ? frequentCommAfter / totalAfterComm : 0;
+
+    const empathyIncrease = Math.round((rateAfter - rateBefore) * 100);
 
     return {
       totalParticipants,
@@ -209,7 +225,7 @@ export default function ImpactDashboard() {
     const uniqueGroups = Array.from(new Set(groups));
 
     // Create demographic distribution based on groups
-    const demographics = uniqueGroups.slice(0, 4).map((group, index) => {
+    const demographics = Array.from(uniqueGroups).map((group) => {
       const count = groups.filter(g => g === group).length;
       return {
         country: group,
@@ -223,18 +239,9 @@ export default function ImpactDashboard() {
       d.percentage = Math.round((d.participants / total) * 100);
     });
 
-    // Add "Otros" if needed
-    if (uniqueGroups.length > 4) {
-      const othersCount = uniqueGroups.slice(4).reduce((sum, group) => {
-        return sum + groups.filter(g => g === group).length * 3;
-      }, 0);
-      
-      demographics.push({
-        country: "Otros",
-        participants: othersCount,
-        percentage: Math.round((othersCount / (total + othersCount)) * 100),
-      });
-    }
+    // No "Otros" needed, as all unique groups are mapped.
+    // The 'group' field in the session data is used as a proxy for 'País' or 'Nacionalidad'
+    // in the absence of a dedicated nationality field.
 
     return demographics.length > 0 ? demographics : [
       { country: "Sin datos", participants: 0, percentage: 100 }
