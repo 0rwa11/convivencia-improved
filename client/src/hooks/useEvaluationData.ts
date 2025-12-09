@@ -110,6 +110,18 @@ export function useEvaluationData() {
     [evaluations, saveEvaluations]
   );
 
+  // Update an evaluation
+  const updateEvaluation = useCallback(
+    (evaluationId: string, data: Partial<Omit<EvaluationData, "id" | "createdAt">>) => {
+      saveEvaluations(
+        evaluations.map((e) =>
+          e.id === evaluationId ? { ...e, ...data } : e
+        )
+      );
+    },
+    [evaluations, saveEvaluations]
+  );
+
   // Delete an evaluation
   const deleteEvaluation = useCallback(
     (evaluationId: string) => {
@@ -221,6 +233,7 @@ export function useEvaluationData() {
     deleteSession,
     updateSession,
     createEvaluation,
+    updateEvaluation,
     deleteEvaluation,
     getSessionEvaluations,
     exportAsCSV,

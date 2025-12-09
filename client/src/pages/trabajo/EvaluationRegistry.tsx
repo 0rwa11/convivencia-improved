@@ -36,15 +36,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Download, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Download, Trash2, ChevronDown, ChevronUp, Edit, X } from "lucide-react";
 import { toast } from "sonner";
+import type { EvaluationData } from "@/hooks/useEvaluationData";
 
 export default function EvaluationRegistry() {
-  const { sessions, createSession, deleteSession, getSessionEvaluations, exportAsCSV } =
+  const { sessions, createSession, deleteSession, getSessionEvaluations, exportAsCSV, updateEvaluation, deleteEvaluation } =
     useEvaluationData();
   const [openDialog, setOpenDialog] = useState(false);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+  const [deleteEvalId, setDeleteEvalId] = useState<string | null>(null);
+  const [editingEval, setEditingEval] = useState<EvaluationData | null>(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     facilitator: "",
@@ -78,6 +83,39 @@ export default function EvaluationRegistry() {
     setDeleteSessionId(null);
   };
 
+  const handleDeleteEvaluation = (evalId: string) => {
+    deleteEvaluation(evalId);
+    toast.success("Evaluación eliminada exitosamente");
+    setDeleteEvalId(null);
+  };
+
+  const handleEditEvaluation = (evaluation: EvaluationData) => {
+    setEditingEval(evaluation);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingEval) return;
+    
+    updateEvaluation(editingEval.id, {
+      phase: editingEval.phase,
+      grouping: editingEval.grouping,
+      discomfort: editingEval.discomfort,
+      tensions: editingEval.tensions,
+      communication: editingEval.communication,
+      mixedInteractions: editingEval.mixedInteractions,
+      participation: editingEval.participation,
+      respect: editingEval.respect,
+      openness: editingEval.openness,
+      laughter: editingEval.laughter,
+      mixedObserved: editingEval.mixedObserved,
+      groupingAfter: editingEval.groupingAfter,
+      mixedInteractionsAfter: editingEval.mixedInteractionsAfter,
+    });
+    
+    toast.success("Evaluación actualizada exitosamente");
+    setEditingEval(null);
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString("es-ES", {
@@ -87,6 +125,15 @@ export default function EvaluationRegistry() {
       });
     } catch {
       return dateString;
+    }
+  };
+
+  const getPhaseLabel = (phase: string) => {
+    switch (phase) {
+      case "before": return "ANTES";
+      case "during": return "DURANTE";
+      case "after": return "DESPUÉS";
+      default: return phase;
     }
   };
 
@@ -236,38 +283,36 @@ export default function EvaluationRegistry() {
                     <AlertDialog open={deleteSessionId === session.id} onOpenChange={(open) => {
                       if (!open) setDeleteSessionId(null);
                     }}>
-                      <AlertDialog open={deleteSessionId === session.id}>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Eliminar Sesión</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              ¿Estás seguro de que deseas eliminar esta sesión? Se eliminarán todas las evaluaciones asociadas. Esta acción no se puede deshacer.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <div className="flex gap-3 justify-end">
-                            <AlertDialogCancel onClick={() => setDeleteSessionId(null)}>
-                              Cancelar
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteSession(session.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Eliminar
-                            </AlertDialogAction>
-                          </div>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteSessionId(session.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Eliminar Sesión</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            ¿Estás seguro de que deseas eliminar esta sesión? Se eliminarán todas las evaluaciones asociadas. Esta acción no se puede deshacer.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="flex gap-3 justify-end">
+                          <AlertDialogCancel onClick={() => setDeleteSessionId(null)}>
+                            Cancelar
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteSession(session.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </div>
+                      </AlertDialogContent>
                     </AlertDialog>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteSessionId(session.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </div>
                 </div>
 
@@ -287,16 +332,35 @@ export default function EvaluationRegistry() {
                               <TableHead>Malestar</TableHead>
                               <TableHead>Tensiones</TableHead>
                               <TableHead>Comunicación</TableHead>
+                              <TableHead>Acciones</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {evaluations.map((evaluation) => (
                               <TableRow key={evaluation.id}>
-                                <TableCell className="capitalize">{evaluation.phase}</TableCell>
-                                <TableCell>{evaluation.grouping}</TableCell>
-                                <TableCell>{evaluation.discomfort}</TableCell>
-                                <TableCell>{evaluation.tensions}</TableCell>
-                                <TableCell>{evaluation.communication}</TableCell>
+                                <TableCell className="capitalize">{getPhaseLabel(evaluation.phase)}</TableCell>
+                                <TableCell>{evaluation.grouping || "-"}</TableCell>
+                                <TableCell>{evaluation.discomfort || "-"}</TableCell>
+                                <TableCell>{evaluation.tensions || "-"}</TableCell>
+                                <TableCell>{evaluation.communication || "-"}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditEvaluation(evaluation)}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setDeleteEvalId(evaluation.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -310,6 +374,254 @@ export default function EvaluationRegistry() {
           })
         )}
       </div>
+
+      {/* Edit Evaluation Dialog */}
+      <Dialog open={!!editingEval} onOpenChange={(open) => !open && setEditingEval(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Evaluación</DialogTitle>
+            <DialogDescription>
+              Modifica los datos de la evaluación
+            </DialogDescription>
+          </DialogHeader>
+          {editingEval && (
+            <div className="space-y-4">
+              <div>
+                <Label>Fase</Label>
+                <Select 
+                  value={editingEval.phase} 
+                  onValueChange={(value: any) => setEditingEval({...editingEval, phase: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="before">ANTES</SelectItem>
+                    <SelectItem value="during">DURANTE</SelectItem>
+                    <SelectItem value="after">DESPUÉS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Before/After fields */}
+              {(editingEval.phase === "before" || editingEval.phase === "after") && (
+                <>
+                  <div>
+                    <Label>Agrupación por nacionalidad</Label>
+                    <RadioGroup 
+                      value={editingEval.grouping} 
+                      onValueChange={(value) => setEditingEval({...editingEval, grouping: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="separated" id="edit-separated" />
+                        <Label htmlFor="edit-separated" className="font-normal">Muy separados</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="partial" id="edit-partial" />
+                        <Label htmlFor="edit-partial" className="font-normal">Parcialmente separados</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="mixed" id="edit-mixed" />
+                        <Label htmlFor="edit-mixed" className="font-normal">Mixtos</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Nivel de aislamiento</Label>
+                    <RadioGroup 
+                      value={editingEval.discomfort} 
+                      onValueChange={(value) => setEditingEval({...editingEval, discomfort: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="edit-high" />
+                        <Label htmlFor="edit-high" className="font-normal">Alto</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medium" id="edit-medium" />
+                        <Label htmlFor="edit-medium" className="font-normal">Medio</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="low" id="edit-low" />
+                        <Label htmlFor="edit-low" className="font-normal">Bajo</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Tensiones observables</Label>
+                    <RadioGroup 
+                      value={editingEval.tensions} 
+                      onValueChange={(value) => setEditingEval({...editingEval, tensions: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="frequent" id="edit-frequent" />
+                        <Label htmlFor="edit-frequent" className="font-normal">Sí, frecuentes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="occasional" id="edit-occasional" />
+                        <Label htmlFor="edit-occasional" className="font-normal">Sí, ocasionales</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="edit-none" />
+                        <Label htmlFor="edit-none" className="font-normal">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Comunicación entre grupos</Label>
+                    <RadioGroup 
+                      value={editingEval.communication} 
+                      onValueChange={(value) => setEditingEval({...editingEval, communication: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="very-limited" id="edit-very-limited" />
+                        <Label htmlFor="edit-very-limited" className="font-normal">Muy limitada</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="limited" id="edit-limited" />
+                        <Label htmlFor="edit-limited" className="font-normal">Limitada</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="frequent" id="edit-freq" />
+                        <Label htmlFor="edit-freq" className="font-normal">Frecuente</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Interacciones mixtas (número)</Label>
+                    <Input 
+                      type="number" 
+                      value={editingEval.mixedInteractions || 0}
+                      onChange={(e) => setEditingEval({...editingEval, mixedInteractions: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* During fields */}
+              {editingEval.phase === "during" && (
+                <>
+                  <div>
+                    <Label>Participación</Label>
+                    <Select 
+                      value={editingEval.participation} 
+                      onValueChange={(value) => setEditingEval({...editingEval, participation: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="100">100%</SelectItem>
+                        <SelectItem value="80-99">80-99%</SelectItem>
+                        <SelectItem value="60-79">60-79%</SelectItem>
+                        <SelectItem value="below-60">Menos del 60%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Nivel de respeto</Label>
+                    <RadioGroup 
+                      value={editingEval.respect} 
+                      onValueChange={(value) => setEditingEval({...editingEval, respect: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="edit-respect-high" />
+                        <Label htmlFor="edit-respect-high" className="font-normal">Alto</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medium" id="edit-respect-medium" />
+                        <Label htmlFor="edit-respect-medium" className="font-normal">Medio</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="low" id="edit-respect-low" />
+                        <Label htmlFor="edit-respect-low" className="font-normal">Bajo</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Apertura a compartir</Label>
+                    <RadioGroup 
+                      value={editingEval.openness} 
+                      onValueChange={(value) => setEditingEval({...editingEval, openness: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="high" id="edit-openness-high" />
+                        <Label htmlFor="edit-openness-high" className="font-normal">Alta</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="medium" id="edit-openness-medium" />
+                        <Label htmlFor="edit-openness-medium" className="font-normal">Media</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="low" id="edit-openness-low" />
+                        <Label htmlFor="edit-openness-low" className="font-normal">Baja</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Risas y momentos positivos</Label>
+                    <RadioGroup 
+                      value={editingEval.laughter} 
+                      onValueChange={(value) => setEditingEval({...editingEval, laughter: value})}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="frequent" id="edit-laughter-frequent" />
+                        <Label htmlFor="edit-laughter-frequent" className="font-normal">Frecuentes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="occasional" id="edit-laughter-occasional" />
+                        <Label htmlFor="edit-laughter-occasional" className="font-normal">Ocasionales</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="rare" id="edit-laughter-rare" />
+                        <Label htmlFor="edit-laughter-rare" className="font-normal">Raros</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-3 justify-end pt-4">
+                <Button variant="outline" onClick={() => setEditingEval(null)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Guardar Cambios
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Evaluation Alert Dialog */}
+      <AlertDialog open={!!deleteEvalId} onOpenChange={(open) => !open && setDeleteEvalId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Evaluación</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar esta evaluación? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={() => setDeleteEvalId(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteEvalId && handleDeleteEvaluation(deleteEvalId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

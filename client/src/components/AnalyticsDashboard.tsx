@@ -1,333 +1,603 @@
 /**
  * Dashboard de Análisis Avanzados
- * Muestra gráficos, métricas y análisis estadísticos
+ * Muestra gráficos, métricas y análisis estadísticos con datos reales
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Download, BarChart3, TrendingUp, Users } from 'lucide-react';
+import { Download, BarChart3, TrendingUp, Users, FileText, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEvaluationData } from '@/hooks/useEvaluationData';
 import {
-  TrendLineChart,
-  ComparisonBarChart,
-  RadarChartComponent,
-  MetricCard,
-  HeatmapTable,
-} from './AdvancedCharts';
-import { generatePDF, generateExcel } from '@/lib/reportGenerator';
-import { calculateMetrics, analyzeTrend } from '@/lib/analytics';
+  BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
-/**
- * Datos de ejemplo para demostración
- */
-const generateSampleData = () => {
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
-  return months.map((month, i) => ({
-    name: month,
-    value: 65 + Math.random() * 30 + i * 5,
-    trend: 65 + i * 8,
-  }));
-};
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
-const generateComparisonData = () => {
-  return [
-    { name: 'Grupo A', evaluacion1: 85, evaluacion2: 78, evaluacion3: 82 },
-    { name: 'Grupo B', evaluacion1: 92, evaluacion2: 88, evaluacion3: 90 },
-    { name: 'Grupo C', evaluacion1: 78, evaluacion2: 85, evaluacion3: 80 },
-    { name: 'Grupo D', evaluacion1: 88, evaluacion2: 92, evaluacion3: 89 },
+export default function AnalyticsDashboard() {
+  const { sessions, evaluations } = useEvaluationData();
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectedPhase, setSelectedPhase] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Get unique groups
+  const groups = useMemo(() => {
+    return Array.from(new Set(sessions.map(s => s.group)));
+  }, [sessions]);
+
+  // Filter evaluations based on selections
+  const filteredEvaluations = useMemo(() => {
+    return evaluations.filter(e => {
+      const session = sessions.find(s => s.id === e.sessionId);
+      const groupMatch = selectedGroup === "all" || session?.group === selectedGroup;
+      const phaseMatch = selectedPhase === "all" || e.phase === selectedPhase;
+      return groupMatch && phaseMatch;
+    });
+  }, [evaluations, sessions, selectedGroup, selectedPhase]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalEvaluations = filteredEvaluations.length;
+    const beforeEvals = filteredEvaluations.filter(e => e.phase === "before");
+    const duringEvals = filteredEvaluations.filter(e => e.phase === "during");
+    const afterEvals = filteredEvaluations.filter(e => e.phase === "after");
+
+    // Mixed interactions analysis
+    const avgMixedBefore = beforeEvals.length > 0
+      ? beforeEvals.reduce((sum, e) => sum + (e.mixedInteractions || 0), 0) / beforeEvals.length
+      : 0;
+    
+    const avgMixedAfter = afterEvals.length > 0
+      ? afterEvals.reduce((sum, e) => sum + (e.mixedInteractionsAfter || 0), 0) / afterEvals.length
+      : 0;
+
+    const improvement = avgMixedBefore > 0 
+      ? ((avgMixedAfter - avgMixedBefore) / avgMixedBefore) * 100 
+      : 0;
+
+    // Participation analysis
+    const participationScores = duringEvals
+      .filter(e => e.participation)
+      .map(e => {
+        if (e.participation === "100") return 100;
+        if (e.participation === "80-99") return 90;
+        if (e.participation === "60-79") return 70;
+        return 50;
+      });
+
+    const avgParticipation = participationScores.length > 0
+      ? participationScores.reduce((sum, p) => sum + p, 0) / participationScores.length
+      : 0;
+
+    // Respect analysis
+    const highRespect = duringEvals.filter(e => e.respect === "high").length;
+    const totalRespect = duringEvals.filter(e => e.respect).length;
+    const respectRate = totalRespect > 0 ? (highRespect / totalRespect) * 100 : 0;
+
+    // Grouping analysis
+    const groupingData = {
+      separated: filteredEvaluations.filter(e => e.grouping === "separated").length,
+      partial: filteredEvaluations.filter(e => e.grouping === "partial").length,
+      mixed: filteredEvaluations.filter(e => e.grouping === "mixed").length,
+    };
+
+    // Tensions analysis
+    const tensionsData = {
+      frequent: filteredEvaluations.filter(e => e.tensions === "frequent").length,
+      occasional: filteredEvaluations.filter(e => e.tensions === "occasional").length,
+      none: filteredEvaluations.filter(e => e.tensions === "none").length,
+    };
+
+    // Communication analysis
+    const communicationData = {
+      "very-limited": filteredEvaluations.filter(e => e.communication === "very-limited").length,
+      limited: filteredEvaluations.filter(e => e.communication === "limited").length,
+      frequent: filteredEvaluations.filter(e => e.communication === "frequent").length,
+    };
+
+    return {
+      totalEvaluations,
+      beforeCount: beforeEvals.length,
+      duringCount: duringEvals.length,
+      afterCount: afterEvals.length,
+      avgMixedBefore: Math.round(avgMixedBefore),
+      avgMixedAfter: Math.round(avgMixedAfter),
+      improvement: Math.round(improvement),
+      avgParticipation: Math.round(avgParticipation),
+      respectRate: Math.round(respectRate),
+      groupingData,
+      tensionsData,
+      communicationData,
+    };
+  }, [filteredEvaluations]);
+
+  // Prepare chart data
+  const phaseDistributionData = [
+    { name: "ANTES", value: stats.beforeCount, color: COLORS[0] },
+    { name: "DURANTE", value: stats.duringCount, color: COLORS[1] },
+    { name: "DESPUÉS", value: stats.afterCount, color: COLORS[2] },
   ];
-};
 
-const generateRadarData = () => {
-  return [
-    { subject: 'Comunicación', A: 85, B: 92, fullMark: 100 },
-    { subject: 'Liderazgo', A: 78, B: 88, fullMark: 100 },
-    { subject: 'Empatía', A: 82, B: 90, fullMark: 100 },
-    { subject: 'Resolución', A: 88, B: 92, fullMark: 100 },
-    { subject: 'Colaboración', A: 80, B: 85, fullMark: 100 },
+  const groupingChartData = [
+    { name: "Muy separados", value: stats.groupingData.separated },
+    { name: "Parcialmente separados", value: stats.groupingData.partial },
+    { name: "Mixtos", value: stats.groupingData.mixed },
   ];
-};
 
-const generateHeatmapData = () => {
-  return {
-    data: [
-      [85, 78, 82, 88, 90],
-      [92, 88, 90, 85, 87],
-      [78, 85, 80, 82, 84],
-      [88, 92, 89, 91, 93],
-    ],
-    labels: {
-      rows: ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D'],
-      cols: ['Sesión 1', 'Sesión 2', 'Sesión 3', 'Sesión 4', 'Sesión 5'],
-    },
-  };
-};
+  const tensionsChartData = [
+    { name: "Frecuentes", value: stats.tensionsData.frequent },
+    { name: "Ocasionales", value: stats.tensionsData.occasional },
+    { name: "Ninguna", value: stats.tensionsData.none },
+  ];
 
-export const AnalyticsDashboard: React.FC = () => {
-  const [isExporting, setIsExporting] = useState(false);
-  const trendData = generateSampleData();
-  const comparisonData = generateComparisonData();
-  const radarData = generateRadarData();
-  const heatmapData = generateHeatmapData();
+  const communicationChartData = [
+    { name: "Muy limitada", value: stats.communicationData["very-limited"] },
+    { name: "Limitada", value: stats.communicationData.limited },
+    { name: "Frecuente", value: stats.communicationData.frequent },
+  ];
 
-  // Calcular métricas
-  const trendValues = trendData.map(d => d.value);
-  const metrics = calculateMetrics(trendValues);
-  const trend = analyzeTrend(trendValues);
+  const impactComparisonData = [
+    { phase: "ANTES", interactions: stats.avgMixedBefore },
+    { phase: "DESPUÉS", interactions: stats.avgMixedAfter },
+  ];
 
-  const handleExportPDF = async () => {
-    setIsExporting(true);
-    try {
-      const reportData = {
-        title: 'Reporte de Análisis - Programa Convivencia',
-        date: new Date().toLocaleDateString('es-ES'),
-        summary: 'Análisis completo del desempeño del programa de convivencia intercultural con métricas estadísticas y comparativas entre grupos.',
-        metrics: {
-          'Evaluaciones Generales': metrics,
-        },
-        tables: [
-          {
-            name: 'Comparativa por Grupo',
-            headers: ['Grupo', 'Evaluación 1', 'Evaluación 2', 'Evaluación 3'],
-            rows: comparisonData.map(d => [
-              d.name,
-              d.evaluacion1,
-              d.evaluacion2,
-              d.evaluacion3,
-            ]),
-          },
-        ],
+  // Group comparison data
+  const groupComparisonData = useMemo(() => {
+    return groups.map(group => {
+      const groupSessions = sessions.filter(s => s.group === group);
+      const groupEvals = evaluations.filter(evaluation => 
+        groupSessions.some(s => s.id === evaluation.sessionId)
+      );
+
+      const beforeEvals = groupEvals.filter(evaluation => evaluation.phase === "before");
+      const afterEvals = groupEvals.filter(evaluation => evaluation.phase === "after");
+
+      const avgBefore = beforeEvals.length > 0
+        ? beforeEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractions || 0), 0) / beforeEvals.length
+        : 0;
+
+      const avgAfter = afterEvals.length > 0
+        ? afterEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractionsAfter || 0), 0) / afterEvals.length
+        : 0;
+
+      return {
+        group,
+        antes: Math.round(avgBefore),
+        despues: Math.round(avgAfter),
+        evaluaciones: groupEvals.length,
       };
+    });
+  }, [groups, sessions, evaluations]);
 
-      await generatePDF(reportData, 'reporte_convivencia.pdf');
-      toast.success('Reporte PDF generado correctamente');
-    } catch (error) {
-      toast.error('Error al generar el reporte PDF');
-      console.error(error);
-    } finally {
-      setIsExporting(false);
-    }
+  // Timeline data - evaluations over time
+  const timelineData = useMemo(() => {
+    const sortedEvals = [...filteredEvaluations].sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    const grouped = sortedEvals.reduce((acc, evaluation) => {
+      const date = new Date(evaluation.createdAt).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      if (!acc[date]) {
+        acc[date] = { date, count: 0 };
+      }
+      acc[date].count++;
+      return acc;
+    }, {} as Record<string, { date: string; count: number }>);
+
+    return Object.values(grouped);
+  }, [filteredEvaluations]);
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Reporte de Análisis Estadístico', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 30);
+    doc.text(`Grupo: ${selectedGroup === 'all' ? 'Todos' : selectedGroup}`, 20, 37);
+    doc.text(`Fase: ${selectedPhase === 'all' ? 'Todas' : selectedPhase}`, 20, 44);
+    
+    doc.setFontSize(14);
+    doc.text('Métricas Generales', 20, 60);
+    
+    doc.setFontSize(10);
+    let y = 70;
+    doc.text(`Total de evaluaciones: ${stats.totalEvaluations}`, 25, y);
+    y += 7;
+    doc.text(`Evaluaciones ANTES: ${stats.beforeCount}`, 25, y);
+    y += 7;
+    doc.text(`Evaluaciones DURANTE: ${stats.duringCount}`, 25, y);
+    y += 7;
+    doc.text(`Evaluaciones DESPUÉS: ${stats.afterCount}`, 25, y);
+    y += 10;
+    
+    doc.setFontSize(14);
+    doc.text('Resultados de Impacto', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    doc.text(`Interacciones mixtas ANTES: ${stats.avgMixedBefore}`, 25, y);
+    y += 7;
+    doc.text(`Interacciones mixtas DESPUÉS: ${stats.avgMixedAfter}`, 25, y);
+    y += 7;
+    doc.text(`Mejora: ${stats.improvement > 0 ? '+' : ''}${stats.improvement}%`, 25, y);
+    y += 10;
+    
+    doc.setFontSize(14);
+    doc.text('Calidad del Proceso', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    doc.text(`Participación promedio: ${stats.avgParticipation}%`, 25, y);
+    y += 7;
+    doc.text(`Tasa de respeto alto: ${stats.respectRate}%`, 25, y);
+    y += 15;
+    
+    doc.setFontSize(14);
+    doc.text('Comparación por Grupo', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    groupComparisonData.forEach(group => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(`${group.group}: ANTES=${group.antes}, DESPUÉS=${group.despues}, Evals=${group.evaluaciones}`, 25, y);
+      y += 7;
+    });
+    
+    doc.save(`analisis-estadistico-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF exportado exitosamente');
   };
 
-  const handleExportExcel = () => {
-    setIsExporting(true);
-    try {
-      const reportData = {
-        title: 'Reporte de Análisis - Programa Convivencia',
-        date: new Date().toLocaleDateString('es-ES'),
-        summary: 'Análisis completo del desempeño del programa de convivencia intercultural.',
-        metrics: {
-          'Evaluaciones Generales': metrics,
-        },
-        tables: [
-          {
-            name: 'Comparativa por Grupo',
-            headers: ['Grupo', 'Evaluación 1', 'Evaluación 2', 'Evaluación 3'],
-            rows: comparisonData.map(d => [
-              d.name,
-              d.evaluacion1,
-              d.evaluacion2,
-              d.evaluacion3,
-            ]),
-          },
-        ],
-      };
-
-      generateExcel(reportData, 'reporte_convivencia.xlsx');
-      toast.success('Reporte Excel generado correctamente');
-    } catch (error) {
-      toast.error('Error al generar el reporte Excel');
-      console.error(error);
-    } finally {
-      setIsExporting(false);
-    }
+  const exportToCSV = () => {
+    const headers = ['Grupo', 'Interacciones ANTES', 'Interacciones DESPUÉS', 'Total Evaluaciones'];
+    const rows = groupComparisonData.map(g => [g.group, g.antes, g.despues, g.evaluaciones]);
+    
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analisis-grupos-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado exitosamente');
   };
 
   return (
-    <div className="w-full space-y-8 py-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-      >
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Dashboard de Análisis
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Análisis estadístico avanzado del programa de convivencia
+          <h1 className="text-4xl font-bold mb-2">Análisis Estadístico Avanzado</h1>
+          <p className="text-lg text-muted-foreground">
+            Visualización y análisis de datos de evaluaciones
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={handleExportPDF}
-            disabled={isExporting}
-            variant="outline"
-            className="gap-2"
-          >
-            <Download className="w-4 h-4" />
-            PDF
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar CSV
           </Button>
-          <Button
-            onClick={handleExportExcel}
-            disabled={isExporting}
-            variant="outline"
-            className="gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Excel
+          <Button onClick={exportToPDF}>
+            <FileText className="w-4 h-4 mr-2" />
+            Exportar PDF
           </Button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* KPI Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        <MetricCard
-          title="Promedio General"
-          value={metrics.mean.toFixed(1)}
-          unit="puntos"
-          icon={<BarChart3 className="w-5 h-5 text-blue-600" />}
-          change={{ value: trend.percentageChange, direction: trend.direction === 'up' ? 'up' : 'down' }}
-        />
-        <MetricCard
-          title="Mediana"
-          value={metrics.median.toFixed(1)}
-          unit="puntos"
-          icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-        />
-        <MetricCard
-          title="Desviación Est."
-          value={metrics.stdDev.toFixed(2)}
-          unit="σ"
-          icon={<Users className="w-5 h-5 text-purple-600" />}
-        />
-        <MetricCard
-          title="Rango"
-          value={`${metrics.min.toFixed(0)} - ${metrics.max.toFixed(0)}`}
-          unit="puntos"
-          icon={<BarChart3 className="w-5 h-5 text-orange-600" />}
-        />
-      </motion.div>
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Grupo</Label>
+              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los grupos</SelectItem>
+                  {groups.map(group => (
+                    <SelectItem key={group} value={group}>{group}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Fase</Label>
+              <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las fases</SelectItem>
+                  <SelectItem value="before">ANTES</SelectItem>
+                  <SelectItem value="during">DURANTE</SelectItem>
+                  <SelectItem value="after">DESPUÉS</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Charts Grid */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-      >
-        {/* Trend Chart */}
-        <TrendLineChart
-          data={trendData}
-          title="Tendencia de Evaluaciones"
-          description="Evolución de las puntuaciones a lo largo del tiempo"
-        />
-
-        {/* Comparison Chart */}
-        <ComparisonBarChart
-          data={comparisonData}
-          dataKeys={['evaluacion1', 'evaluacion2', 'evaluacion3']}
-          title="Comparativa por Grupo"
-          colors={['#2563eb', '#10b981', '#f59e0b']}
-        />
-
-        {/* Radar Chart */}
-        <RadarChartComponent
-          data={radarData}
-          dataKey="A"
-          title="Análisis de Competencias"
-          angleKey="subject"
-        />
-
-        {/* Heatmap */}
-        <HeatmapTable
-          data={heatmapData.data}
-          labels={heatmapData.labels}
-          title="Matriz de Evaluaciones"
-        />
-      </motion.div>
-
-      {/* Statistics Card */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
+      {/* Key Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Estadísticas Detalladas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Evaluaciones</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Media</p>
-                <p className="text-lg font-bold">{metrics.mean.toFixed(2)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Mediana</p>
-                <p className="text-lg font-bold">{metrics.median.toFixed(2)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Q1</p>
-                <p className="text-lg font-bold">{metrics.q1.toFixed(2)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Q3</p>
-                <p className="text-lg font-bold">{metrics.q3.toFixed(2)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">IQR</p>
-                <p className="text-lg font-bold">{metrics.iqr.toFixed(2)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Desv. Est.</p>
-                <p className="text-lg font-bold">{metrics.stdDev.toFixed(2)}</p>
-              </div>
-            </div>
+            <div className="text-2xl font-bold">{stats.totalEvaluations}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.beforeCount} antes, {stats.duringCount} durante, {stats.afterCount} después
+            </p>
           </CardContent>
         </Card>
-      </motion.div>
 
-      {/* Insights */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-          <CardHeader>
-            <CardTitle>Insights Clave</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mejora en Interacciones</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>
-              📈 <strong>Tendencia:</strong> Los datos muestran una tendencia{' '}
-              <span className={trend.direction === 'up' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-                {trend.direction === 'up' ? 'ascendente' : trend.direction === 'down' ? 'descendente' : 'estable'}
-              </span>
-              {' '}con un cambio del {trend.percentageChange.toFixed(1)}%.
-            </p>
-            <p>
-              📊 <strong>Dispersión:</strong> La desviación estándar de {metrics.stdDev.toFixed(2)} indica{' '}
-              {metrics.stdDev < 10 ? 'una distribución consistente' : 'una distribución variable'} de los datos.
-            </p>
-            <p>
-              🎯 <strong>Rango:</strong> Las evaluaciones varían entre {metrics.min.toFixed(0)} y {metrics.max.toFixed(0)} puntos,
-              con un rango de {metrics.range.toFixed(0)} puntos.
+          <CardContent>
+            <div className={`text-2xl font-bold ${stats.improvement > 0 ? 'text-green-600' : ''}`}>
+              {stats.improvement > 0 ? '+' : ''}{stats.improvement}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              De {stats.avgMixedBefore} a {stats.avgMixedAfter}
             </p>
           </CardContent>
         </Card>
-      </motion.div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Participación</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.avgParticipation}%</div>
+            <p className="text-xs text-muted-foreground">Promedio general</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Respeto Alto</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.respectRate}%</div>
+            <p className="text-xs text-muted-foreground">De las sesiones</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for different analyses */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Resumen</TabsTrigger>
+          <TabsTrigger value="groups">Por Grupo</TabsTrigger>
+          <TabsTrigger value="indicators">Indicadores</TabsTrigger>
+          <TabsTrigger value="timeline">Línea de Tiempo</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribución por Fase</CardTitle>
+                <CardDescription>Cantidad de evaluaciones por fase</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={phaseDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {phaseDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Impacto: ANTES vs DESPUÉS</CardTitle>
+                <CardDescription>Interacciones mixtas promedio</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={impactComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="phase" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="interactions" fill={COLORS[0]} name="Interacciones" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="groups" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Comparación por Grupo</CardTitle>
+              <CardDescription>Interacciones mixtas antes y después por grupo</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={groupComparisonData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="group" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="antes" fill={COLORS[0]} name="ANTES" />
+                  <Bar dataKey="despues" fill={COLORS[1]} name="DESPUÉS" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Tabla de Resultados por Grupo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Grupo</th>
+                      <th className="text-right p-2">ANTES</th>
+                      <th className="text-right p-2">DESPUÉS</th>
+                      <th className="text-right p-2">Mejora</th>
+                      <th className="text-right p-2">Evaluaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupComparisonData.map(group => {
+                      const mejora = group.antes > 0 
+                        ? Math.round(((group.despues - group.antes) / group.antes) * 100)
+                        : 0;
+                      return (
+                        <tr key={group.group} className="border-b">
+                          <td className="p-2">{group.group}</td>
+                          <td className="text-right p-2">{group.antes}</td>
+                          <td className="text-right p-2">{group.despues}</td>
+                          <td className={`text-right p-2 ${mejora > 0 ? 'text-green-600' : ''}`}>
+                            {mejora > 0 ? '+' : ''}{mejora}%
+                          </td>
+                          <td className="text-right p-2">{group.evaluaciones}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="indicators" className="space-y-4">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Agrupación por Nacionalidad</CardTitle>
+                <CardDescription>Distribución de patrones de agrupación</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={groupingChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill={COLORS[2]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tensiones Observadas</CardTitle>
+                <CardDescription>Frecuencia de tensiones en las sesiones</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={tensionsChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill={COLORS[3]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Comunicación Entre Grupos</CardTitle>
+                <CardDescription>Nivel de comunicación observado</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={communicationChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill={COLORS[4]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Evaluaciones a lo Largo del Tiempo</CardTitle>
+              <CardDescription>Cantidad de evaluaciones registradas por fecha</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={timelineData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="count" stroke={COLORS[5]} name="Evaluaciones" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
+}
 
-export default AnalyticsDashboard;
+// Helper component for labels
+function Label({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <label className={className}>{children}</label>;
+}
