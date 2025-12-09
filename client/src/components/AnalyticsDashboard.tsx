@@ -1,8 +1,3 @@
-/**
- * Dashboard de Análisis Avanzados
- * Muestra gráficos, métricas y análisis estadísticos con datos reales
- */
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Download, BarChart3, TrendingUp, Users, FileText, Filter } from 'lucide-react';
@@ -21,7 +16,7 @@ import jsPDF from 'jspdf';
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function AnalyticsDashboard() {
-  const { sessions, evaluations } = useEvaluationData();
+  const { sessions, sessionEvaluations } = useEvaluationData();
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectedPhase, setSelectedPhase] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("overview");
@@ -33,51 +28,51 @@ export default function AnalyticsDashboard() {
 
   // Filter evaluations based on selections
   const filteredEvaluations = useMemo(() => {
-    return evaluations.filter(e => {
+    return sessionEvaluations.filter(e => {
       const session = sessions.find(s => s.id === e.sessionId);
       const groupMatch = selectedGroup === "all" || session?.group === selectedGroup;
       const phaseMatch = selectedPhase === "all" || e.phase === selectedPhase;
       return groupMatch && phaseMatch;
     });
-  }, [evaluations, sessions, selectedGroup, selectedPhase]);
+  }, [sessionEvaluations, sessions, selectedGroup, selectedPhase]);
 
   // Calculate statistics
   const stats = useMemo(() => {
     const totalEvaluations = filteredEvaluations.length;
-    const beforeEvals = filteredEvaluations.filter(e => e.phase === "before");
-    const duringEvals = filteredEvaluations.filter(e => e.phase === "during");
-    const afterEvals = filteredEvaluations.filter(e => e.phase === "after");
+    const initialEvals = filteredEvaluations.filter(e => e.phase === "initial");
+    const followupEvals = filteredEvaluations.filter(e => e.phase === "followup");
 
     // Mixed interactions analysis
-    const avgMixedBefore = beforeEvals.length > 0
-      ? beforeEvals.reduce((sum, e) => sum + (e.mixedInteractions || 0), 0) / beforeEvals.length
+    const avgMixedInitial = initialEvals.length > 0
+      ? initialEvals.reduce((sum, e) => sum + (e.mixedInteractions || 0), 0) / initialEvals.length
       : 0;
     
-    const avgMixedAfter = afterEvals.length > 0
-      ? afterEvals.reduce((sum, e) => sum + (e.mixedInteractionsAfter || 0), 0) / afterEvals.length
+    // For session-level analysis, we compare initial to followup
+    const avgMixedFollowup = followupEvals.length > 0
+      ? followupEvals.reduce((sum, e) => sum + (e.mixedInteractions || 0), 0) / followupEvals.length
       : 0;
 
-    const improvement = avgMixedBefore > 0 
-      ? ((avgMixedAfter - avgMixedBefore) / avgMixedBefore) * 100 
+    const improvement = avgMixedInitial > 0 
+      ? ((avgMixedFollowup - avgMixedInitial) / avgMixedInitial) * 100 
       : 0;
 
-    // Participation analysis
-    const participationScores = duringEvals
+    // Participation analysis (using followup evals)
+    const participationScores = followupEvals
       .filter(e => e.participation)
       .map(e => {
         if (e.participation === "100") return 100;
         if (e.participation === "80-99") return 90;
-        if (e.participation === "60-79") return 70;
-        return 50;
+        if (e.participation === "50-79") return 70;
+        return 50; // 0-49
       });
 
     const avgParticipation = participationScores.length > 0
       ? participationScores.reduce((sum, p) => sum + p, 0) / participationScores.length
       : 0;
 
-    // Respect analysis
-    const highRespect = duringEvals.filter(e => e.respect === "high").length;
-    const totalRespect = duringEvals.filter(e => e.respect).length;
+    // Respect analysis (using followup evals)
+    const highRespect = followupEvals.filter(e => e.respect === "high").length;
+    const totalRespect = followupEvals.filter(e => e.respect).length;
     const respectRate = totalRespect > 0 ? (highRespect / totalRespect) * 100 : 0;
 
     // Grouping analysis
@@ -103,11 +98,10 @@ export default function AnalyticsDashboard() {
 
     return {
       totalEvaluations,
-      beforeCount: beforeEvals.length,
-      duringCount: duringEvals.length,
-      afterCount: afterEvals.length,
-      avgMixedBefore: Math.round(avgMixedBefore),
-      avgMixedAfter: Math.round(avgMixedAfter),
+      initialCount: initialEvals.length,
+      followupCount: followupEvals.length,
+      avgMixedInitial: Math.round(avgMixedInitial),
+      avgMixedFollowup: Math.round(avgMixedFollowup),
       improvement: Math.round(improvement),
       avgParticipation: Math.round(avgParticipation),
       respectRate: Math.round(respectRate),
@@ -119,9 +113,8 @@ export default function AnalyticsDashboard() {
 
   // Prepare chart data
   const phaseDistributionData = [
-    { name: "ANTES", value: stats.beforeCount, color: COLORS[0] },
-    { name: "DURANTE", value: stats.duringCount, color: COLORS[1] },
-    { name: "DESPUÉS", value: stats.afterCount, color: COLORS[2] },
+    { name: "INICIAL", value: stats.initialCount, color: COLORS[0] },
+    { name: "SEGUIMIENTO", value: stats.followupCount, color: COLORS[1] },
   ];
 
   const groupingChartData = [
@@ -143,37 +136,37 @@ export default function AnalyticsDashboard() {
   ];
 
   const impactComparisonData = [
-    { phase: "ANTES", interactions: stats.avgMixedBefore },
-    { phase: "DESPUÉS", interactions: stats.avgMixedAfter },
+    { phase: "INICIAL", interactions: stats.avgMixedInitial },
+    { phase: "SEGUIMIENTO", interactions: stats.avgMixedFollowup },
   ];
 
   // Group comparison data
   const groupComparisonData = useMemo(() => {
     return groups.map(group => {
       const groupSessions = sessions.filter(s => s.group === group);
-      const groupEvals = evaluations.filter(evaluation => 
+      const groupEvals = sessionEvaluations.filter(evaluation => 
         groupSessions.some(s => s.id === evaluation.sessionId)
       );
 
-      const beforeEvals = groupEvals.filter(evaluation => evaluation.phase === "before");
-      const afterEvals = groupEvals.filter(evaluation => evaluation.phase === "after");
+      const initialEvals = groupEvals.filter(evaluation => evaluation.phase === "initial");
+      const followupEvals = groupEvals.filter(evaluation => evaluation.phase === "followup");
 
-      const avgBefore = beforeEvals.length > 0
-        ? beforeEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractions || 0), 0) / beforeEvals.length
+      const avgInitial = initialEvals.length > 0
+        ? initialEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractions || 0), 0) / initialEvals.length
         : 0;
 
-      const avgAfter = afterEvals.length > 0
-        ? afterEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractionsAfter || 0), 0) / afterEvals.length
+      const avgFollowup = followupEvals.length > 0
+        ? followupEvals.reduce((sum, evaluation) => sum + (evaluation.mixedInteractions || 0), 0) / followupEvals.length
         : 0;
 
       return {
         group,
-        antes: Math.round(avgBefore),
-        despues: Math.round(avgAfter),
+        initial: Math.round(avgInitial),
+        followup: Math.round(avgFollowup),
         evaluaciones: groupEvals.length,
       };
     });
-  }, [groups, sessions, evaluations]);
+  }, [groups, sessions, sessionEvaluations]);
 
   // Timeline data - evaluations over time
   const timelineData = useMemo(() => {
@@ -209,29 +202,27 @@ export default function AnalyticsDashboard() {
     
     doc.setFontSize(10);
     let y = 70;
-    doc.text(`Total de evaluaciones: ${stats.totalEvaluations}`, 25, y);
+    doc.text(`Total de evaluaciones de sesión: ${stats.totalEvaluations}`, 25, y);
     y += 7;
-    doc.text(`Evaluaciones ANTES: ${stats.beforeCount}`, 25, y);
+    doc.text(`Evaluaciones INICIAL: ${stats.initialCount}`, 25, y);
     y += 7;
-    doc.text(`Evaluaciones DURANTE: ${stats.duringCount}`, 25, y);
-    y += 7;
-    doc.text(`Evaluaciones DESPUÉS: ${stats.afterCount}`, 25, y);
+    doc.text(`Evaluaciones SEGUIMIENTO: ${stats.followupCount}`, 25, y);
     y += 10;
     
     doc.setFontSize(14);
-    doc.text('Resultados de Impacto', 20, y);
+    doc.text('Resultados de Impacto (Sesión)', 20, y);
     y += 10;
     
     doc.setFontSize(10);
-    doc.text(`Interacciones mixtas ANTES: ${stats.avgMixedBefore}`, 25, y);
+    doc.text(`Interacciones mixtas INICIAL: ${stats.avgMixedInitial}`, 25, y);
     y += 7;
-    doc.text(`Interacciones mixtas DESPUÉS: ${stats.avgMixedAfter}`, 25, y);
+    doc.text(`Interacciones mixtas SEGUIMIENTO: ${stats.avgMixedFollowup}`, 25, y);
     y += 7;
     doc.text(`Mejora: ${stats.improvement > 0 ? '+' : ''}${stats.improvement}%`, 25, y);
     y += 10;
     
     doc.setFontSize(14);
-    doc.text('Calidad del Proceso', 20, y);
+    doc.text('Calidad del Proceso (Seguimiento)', 20, y);
     y += 10;
     
     doc.setFontSize(10);
@@ -250,7 +241,7 @@ export default function AnalyticsDashboard() {
         doc.addPage();
         y = 20;
       }
-      doc.text(`${group.group}: ANTES=${group.antes}, DESPUÉS=${group.despues}, Evals=${group.evaluaciones}`, 25, y);
+      doc.text(`${group.group}: INICIAL=${group.initial}, SEGUIMIENTO=${group.followup}, Evals=${group.evaluaciones}`, 25, y);
       y += 7;
     });
     
@@ -259,8 +250,8 @@ export default function AnalyticsDashboard() {
   };
 
   const exportToCSV = () => {
-    const headers = ['Grupo', 'Interacciones ANTES', 'Interacciones DESPUÉS', 'Total Evaluaciones'];
-    const rows = groupComparisonData.map(g => [g.group, g.antes, g.despues, g.evaluaciones]);
+    const headers = ['Grupo', 'Interacciones INICIAL', 'Interacciones SEGUIMIENTO', 'Total Evaluaciones'];
+    const rows = groupComparisonData.map(g => [g.group, g.initial, g.followup, g.evaluaciones]);
     
     const csv = [
       headers.join(','),
@@ -271,162 +262,150 @@ export default function AnalyticsDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `analisis-grupos-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `analisis-estadistico-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
     toast.success('CSV exportado exitosamente');
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Análisis Estadístico Avanzado</h1>
-          <p className="text-lg text-muted-foreground">
-            Visualización y análisis de datos de evaluaciones
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar CSV
-          </Button>
-          <Button onClick={exportToPDF}>
-            <FileText className="w-4 h-4 mr-2" />
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold">Análisis Avanzado de Sesiones</h1>
+        <div className="flex space-x-2">
+          <Button onClick={exportToPDF} variant="outline" className="gap-2">
+            <FileText className="w-4 h-4" />
             Exportar PDF
+          </Button>
+          <Button onClick={exportToCSV} variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            Exportar CSV
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtros
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" /> Filtros de Datos</CardTitle>
+          <CardDescription>Selecciona el grupo y la fase para enfocar el análisis.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Grupo</Label>
-              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los grupos</SelectItem>
-                  {groups.map(group => (
-                    <SelectItem key={group} value={group}>{group}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Fase</Label>
-              <Select value={selectedPhase} onValueChange={setSelectedPhase}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las fases</SelectItem>
-                  <SelectItem value="before">ANTES</SelectItem>
-                  <SelectItem value="during">DURANTE</SelectItem>
-                  <SelectItem value="after">DESPUÉS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Filtrar por Grupo</label>
+            <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los Grupos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los Grupos</SelectItem>
+                {groups.map(group => (
+                  <SelectItem key={group} value={group}>{group}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Filtrar por Fase</label>
+            <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las Fases" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las Fases</SelectItem>
+                <SelectItem value="initial">INICIAL</SelectItem>
+                <SelectItem value="followup">SEGUIMIENTO</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Evaluaciones Filtradas</label>
+            <div className="text-2xl font-bold pt-1">{stats.totalEvaluations}</div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Evaluaciones</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvaluations}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.beforeCount} antes, {stats.duringCount} durante, {stats.afterCount} después
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mejora en Interacciones</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${stats.improvement > 0 ? 'text-green-600' : ''}`}>
-              {stats.improvement > 0 ? '+' : ''}{stats.improvement}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              De {stats.avgMixedBefore} a {stats.avgMixedAfter}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Participación</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.avgParticipation}%</div>
-            <p className="text-xs text-muted-foreground">Promedio general</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Respeto Alto</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.respectRate}%</div>
-            <p className="text-xs text-muted-foreground">De las sesiones</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs for different analyses */}
+      {/* Pestañas de Análisis */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Resumen</TabsTrigger>
-          <TabsTrigger value="groups">Por Grupo</TabsTrigger>
+          <TabsTrigger value="groups">Grupos</TabsTrigger>
           <TabsTrigger value="indicators">Indicadores</TabsTrigger>
           <TabsTrigger value="timeline">Línea de Tiempo</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid lg:grid-cols-2 gap-6">
+        {/* 1. Resumen */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Distribución por Fase</CardTitle>
-                <CardDescription>Cantidad de evaluaciones por fase</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Mejora en Interacciones Mixtas</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <div className="text-2xl font-bold">{stats.improvement > 0 ? '+' : ''}{stats.improvement}%</div>
+                <p className="text-xs text-muted-foreground">
+                  De {stats.avgMixedInitial} (Inicial) a {stats.avgMixedFollowup} (Seguimiento)
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Participación Promedio</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgParticipation}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Basado en evaluaciones de seguimiento
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Tasa de Respeto Alto</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.respectRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Evaluaciones con respeto mutuo 'Alto'
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribución de Fases</CardTitle>
+                <CardDescription>Número de evaluaciones por fase.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={phaseDistributionData}
+                      dataKey="value"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={80}
+                      outerRadius={100}
                       fill="#8884d8"
-                      dataKey="value"
+                      label
                     >
                       {phaseDistributionData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip />
+                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -434,18 +413,18 @@ export default function AnalyticsDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Impacto: ANTES vs DESPUÉS</CardTitle>
-                <CardDescription>Interacciones mixtas promedio</CardDescription>
+                <CardTitle>Interacciones Mixtas (Inicial vs. Seguimiento)</CardTitle>
+                <CardDescription>Promedio de interacciones mixtas observadas.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={impactComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="phase" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="interactions" fill={COLORS[0]} name="Interacciones" />
+                    <Bar dataKey="interactions" name="Interacciones Mixtas" fill={COLORS[3]} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -453,151 +432,137 @@ export default function AnalyticsDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="groups" className="space-y-4">
+        {/* 2. Grupos */}
+        <TabsContent value="groups" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Comparación por Grupo</CardTitle>
-              <CardDescription>Interacciones mixtas antes y después por grupo</CardDescription>
+              <CardTitle>Comparación de Interacciones por Grupo</CardTitle>
+              <CardDescription>Promedio de interacciones mixtas por grupo en las fases Inicial y Seguimiento.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+            <CardContent className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={groupComparisonData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="group" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="antes" fill={COLORS[0]} name="ANTES" />
-                  <Bar dataKey="despues" fill={COLORS[1]} name="DESPUÉS" />
+                  <Bar dataKey="initial" name="INICIAL" fill={COLORS[0]} />
+                  <Bar dataKey="followup" name="SEGUIMIENTO" fill={COLORS[1]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Tabla de Resultados por Grupo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Grupo</th>
-                      <th className="text-right p-2">ANTES</th>
-                      <th className="text-right p-2">DESPUÉS</th>
-                      <th className="text-right p-2">Mejora</th>
-                      <th className="text-right p-2">Evaluaciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {groupComparisonData.map(group => {
-                      const mejora = group.antes > 0 
-                        ? Math.round(((group.despues - group.antes) / group.antes) * 100)
-                        : 0;
-                      return (
-                        <tr key={group.group} className="border-b">
-                          <td className="p-2">{group.group}</td>
-                          <td className="text-right p-2">{group.antes}</td>
-                          <td className="text-right p-2">{group.despues}</td>
-                          <td className={`text-right p-2 ${mejora > 0 ? 'text-green-600' : ''}`}>
-                            {mejora > 0 ? '+' : ''}{mejora}%
-                          </td>
-                          <td className="text-right p-2">{group.evaluaciones}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        <TabsContent value="indicators" className="space-y-4">
-          <div className="grid lg:grid-cols-2 gap-6">
+        {/* 3. Indicadores */}
+        <TabsContent value="indicators" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>Agrupación por Nacionalidad</CardTitle>
-                <CardDescription>Distribución de patrones de agrupación</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={groupingChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={groupingChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {groupingChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Bar dataKey="value" fill={COLORS[2]} />
-                  </BarChart>
+                    <Legend />
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Tensiones Observadas</CardTitle>
-                <CardDescription>Frecuencia de tensiones en las sesiones</CardDescription>
+                <CardTitle>Tensiones Observables</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={tensionsChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={tensionsChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {tensionsChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Bar dataKey="value" fill={COLORS[3]} />
-                  </BarChart>
+                    <Legend />
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Comunicación Entre Grupos</CardTitle>
-                <CardDescription>Nivel de comunicación observado</CardDescription>
+                <CardTitle>Comunicación entre Grupos</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={communicationChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={communicationChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {communicationChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Bar dataKey="value" fill={COLORS[4]} />
-                  </BarChart>
+                    <Legend />
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="timeline" className="space-y-4">
+        {/* 4. Línea de Tiempo */}
+        <TabsContent value="timeline" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Evaluaciones a lo Largo del Tiempo</CardTitle>
-              <CardDescription>Cantidad de evaluaciones registradas por fecha</CardDescription>
+              <CardTitle>Evaluaciones Registradas por Día</CardTitle>
+              <CardDescription>Volumen de datos de sesión ingresados a lo largo del tiempo.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+            <CardContent className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timelineData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="count" stroke={COLORS[5]} name="Evaluaciones" />
+                  <Line type="monotone" dataKey="count" name="Evaluaciones" stroke={COLORS[0]} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
-}
-
-// Helper component for labels
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={className}>{children}</label>;
 }

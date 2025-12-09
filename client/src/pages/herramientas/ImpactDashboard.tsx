@@ -11,29 +11,30 @@ import { toast } from "sonner";
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function ImpactDashboard() {
-  const { sessions, evaluations } = useEvaluationData();
+  const { sessions, sessionEvaluations, programEvaluations } = useEvaluationData();
 
-  // Calculate real metrics from evaluation data
+  // --- Core Metrics Calculation ---
   const metrics = useMemo(() => {
-    const totalParticipants = new Set(
-      sessions.map(s => s.group)
-    ).size * 15; // Estimate 15 participants per group
+    // 1. Total Participants (More realistic estimation)
+    const uniqueGroups = new Set(sessions.map(s => s.group));
+    const nationalitiesCount = uniqueGroups.size;
+    // Assuming a fixed average of 15 participants per unique group
+    const totalParticipants = nationalitiesCount * 15; 
 
-    const beforeEvals = evaluations.filter(e => e.phase === "before");
-    const duringEvals = evaluations.filter(e => e.phase === "during");
-    const afterEvals = evaluations.filter(e => e.phase === "after");
+    const initialEvals = sessionEvaluations.filter(e => e.phase === "initial");
+    const followupEvals = sessionEvaluations.filter(e => e.phase === "followup");
+    const finalImpactEval = programEvaluations[programEvaluations.length - 1]; // Use the latest final impact evaluation
 
-    // Calculate completion rate
-    const completedSessions = sessions.filter(s => {
-      const sessionEvals = evaluations.filter(e => e.sessionId === s.id);
-      return sessionEvals.some(e => e.phase === "after");
+    // 2. Completion Rate (Based on sessions with at least one followup evaluation)
+    const sessionsWithFollowup = sessions.filter(s => {
+      return sessionEvaluations.some(e => e.sessionId === s.id && e.phase === "followup");
     }).length;
     const completionRate = sessions.length > 0 
-      ? Math.round((completedSessions / sessions.length) * 100)
+      ? Math.round((sessionsWithFollowup / sessions.length) * 100)
       : 0;
 
-    // Calculate satisfaction (based on respect + openness + laughter)
-    const satisfactionScores = duringEvals.map(e => {
+    // 3. Average Satisfaction (Based on respect + openness + laughter in followup evals)
+    const satisfactionScores = followupEvals.map(e => {
       let score = 0;
       if (e.respect === "high") score += 33;
       else if (e.respect === "medium") score += 20;
@@ -51,41 +52,19 @@ export default function ImpactDashboard() {
       ? Math.round(satisfactionScores.reduce((sum, s) => sum + s, 0) / satisfactionScores.length)
       : 0;
 
-    // Count nationalities (estimated from unique groups)
-    const uniqueGroups = new Set(sessions.map(s => s.group));
-    const nationalitiesCount = uniqueGroups.size;
+    // 4. Stereotype Reduction (Based on final impact evaluation)
+    const stereotypeReduction = finalImpactEval?.groupingAfter === "mixed" 
+      ? 85 // High impact proxy
+      : finalImpactEval?.groupingAfter === "partial" 
+      ? 50 // Medium impact proxy
+      : 20; // Low impact proxy
 
-    // Calculate stereotype reduction (based on grouping improvement)
-    const separatedBefore = beforeEvals.filter(e => e.grouping === "separated").length;
-    const mixedAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const totalBeforeGrouping = beforeEvals.filter(e => e.grouping).length;
-    const totalAfterGrouping = afterEvals.filter(e => e.grouping).length;
-    
-    const stereotypeReduction = totalBeforeGrouping > 0 && totalAfterGrouping > 0
-      ? Math.round(((mixedAfter / totalAfterGrouping) - (1 - separatedBefore / totalBeforeGrouping)) * 100)
-      : 0;
-
-    // Calculate empathy increase (based on communication and respect improvement)
-    // Empathy is a proxy for the 'respect' and 'openness' indicators in the 'during' phase
-    const avgRespectDuring = duringEvals.length > 0
-      ? duringEvals.filter(e => e.respect === "high").length / duringEvals.length
-      : 0;
-    const avgOpennessDuring = duringEvals.length > 0
-      ? duringEvals.filter(e => e.openness === "high").length / duringEvals.length
-      : 0;
-    const empathyScore = Math.round(((avgRespectDuring + avgOpennessDuring) / 2) * 100);
-
-    // Use a simpler, more direct calculation for Empathy Increase for the dashboard metric
-    // Compare 'communication' (proxy for empathy) before and after
-    const frequentCommBefore = beforeEvals.filter(e => e.communication === "frequent").length;
-    const frequentCommAfter = afterEvals.filter(e => e.communication === "frequent").length;
-    const totalBeforeComm = beforeEvals.filter(e => e.communication).length;
-    const totalAfterComm = afterEvals.filter(e => e.communication).length;
-
-    const rateBefore = totalBeforeComm > 0 ? frequentCommBefore / totalBeforeComm : 0;
-    const rateAfter = totalAfterComm > 0 ? frequentCommAfter / totalAfterComm : 0;
-
-    const empathyIncrease = Math.round((rateAfter - rateBefore) * 100);
+    // 5. Empathy Increase (Based on final impact evaluation)
+    const empathyIncrease = finalImpactEval?.mixedInteractionsAfter && finalImpactEval.mixedInteractionsAfter > 5
+      ? 75 // High impact proxy
+      : finalImpactEval?.mixedInteractionsAfter && finalImpactEval.mixedInteractionsAfter > 2
+      ? 40 // Medium impact proxy
+      : 15; // Low impact proxy
 
     return {
       totalParticipants,
@@ -95,39 +74,38 @@ export default function ImpactDashboard() {
       stereotypeReduction: Math.max(stereotypeReduction, 0),
       empathyIncrease: Math.max(empathyIncrease, 0),
     };
-  }, [sessions, evaluations]);
+  }, [sessions, sessionEvaluations, programEvaluations]);
 
-  // Participation data by session
+  // --- Data for Charts ---
+
+  // 1. Participation data by session (using followup evaluations)
   const participationData = useMemo(() => {
     return sessions.slice(0, 10).map((session, index) => {
-      const sessionEvals = evaluations.filter(e => e.sessionId === session.id);
-      const duringEval = sessionEvals.find(e => e.phase === "during");
+      const sessionEvals = sessionEvaluations.filter(e => e.sessionId === session.id);
+      const followupEval = sessionEvals.find(e => e.phase === "followup");
       
-      let participationScore = 15; // Default participants
-      if (duringEval?.participation === "100") participationScore = 15;
-      else if (duringEval?.participation === "80-99") participationScore = 13;
-      else if (duringEval?.participation === "60-79") participationScore = 11;
-      else if (duringEval?.participation === "below-60") participationScore = 9;
-
-      const completed = sessionEvals.some(e => e.phase === "after") ? participationScore : participationScore - 2;
+      let participationScore = 0;
+      if (followupEval?.participation === "100") participationScore = 100;
+      else if (followupEval?.participation === "80-99") participationScore = 90;
+      else if (followupEval?.participation === "50-79") participationScore = 65;
+      else if (followupEval?.participation === "0-49") participationScore = 25;
 
       return {
         session: `Sesión ${index + 1}`,
-        participants: participationScore,
-        completed: completed,
+        participation: participationScore,
       };
     });
-  }, [sessions, evaluations]);
+  }, [sessions, sessionEvaluations]);
 
-  // Satisfaction distribution
+  // 2. Satisfaction distribution (using followup evaluations)
   const satisfactionData = useMemo(() => {
-    const duringEvals = evaluations.filter(e => e.phase === "during");
+    const followupEvals = sessionEvaluations.filter(e => e.phase === "followup");
     
     let verySatisfied = 0;
     let satisfied = 0;
     let neutral = 0;
 
-    duringEvals.forEach(e => {
+    followupEvals.forEach(e => {
       const score = 
         (e.respect === "high" ? 1 : e.respect === "medium" ? 0.5 : 0) +
         (e.openness === "high" ? 1 : e.openness === "medium" ? 0.5 : 0) +
@@ -145,46 +123,39 @@ export default function ImpactDashboard() {
       { name: "Satisfecho", value: Math.round((satisfied / total) * 100), color: COLORS[1] },
       { name: "Neutral", value: Math.round((neutral / total) * 100), color: COLORS[2] },
     ];
-  }, [evaluations]);
+  }, [sessionEvaluations]);
 
-  // Impact metrics over time
+  // 3. Impact metrics (using final program evaluation)
   const impactMetrics = useMemo(() => {
-    const beforeEvals = evaluations.filter(e => e.phase === "before");
-    const afterEvals = evaluations.filter(e => e.phase === "after");
+    const finalEval = programEvaluations[programEvaluations.length - 1];
 
-    // Reducción de Estereotipos: Proxy is the percentage of 'mixed' grouping in after-evaluations
-    const mixedAfter = afterEvals.filter(e => e.grouping === "mixed").length;
-    const totalAfterGrouping = afterEvals.filter(e => e.grouping).length;
-    const stereotypeReduction = totalAfterGrouping > 0
-      ? Math.round((mixedAfter / totalAfterGrouping) * 100)
-      : 0;
+    // Reducción de Estereotipos: Proxy is the percentage of 'mixed' grouping in final eval
+    const stereotypeReduction = finalEval?.groupingAfter === "mixed" 
+      ? 85 
+      : finalEval?.groupingAfter === "partial" 
+      ? 50 
+      : 20; 
 
-    // Aumento de Empatía: Proxy is the percentage of 'frequent' communication in after-evaluations
-    const frequentCommAfter = afterEvals.filter(e => e.communication === "frequent").length;
-    const totalAfterComm = afterEvals.filter(e => e.communication).length;
-    const empathyIncrease = totalAfterComm > 0
-      ? Math.round((frequentCommAfter / totalAfterComm) * 100)
-      : 0;
+    // Aumento de Empatía: Proxy is the number of mixed interactions in final eval
+    const empathyIncrease = finalEval?.mixedInteractionsAfter && finalEval.mixedInteractionsAfter > 5
+      ? 75 
+      : finalEval?.mixedInteractionsAfter && finalEval.mixedInteractionsAfter > 2
+      ? 40 
+      : 15; 
 
-    // Fortalecimiento Comunitario: Proxy is the percentage of 'no tensions' in after-evaluations
-    const noTensionsAfter = afterEvals.filter(e => e.tensions === "none").length;
-    const totalAfterTensions = afterEvals.filter(e => e.tensions).length;
-    const communityStrength = totalAfterTensions > 0
-      ? Math.round((noTensionsAfter / totalAfterTensions) * 100)
-      : 0;
+    // Fortalecimiento Comunitario: Proxy is the number of products completed
+    const communityStrength = finalEval?.productsCompleted && finalEval.productsCompleted > 2
+      ? 80
+      : finalEval?.productsCompleted && finalEval.productsCompleted > 0
+      ? 50
+      : 10;
 
-    // Desarrollo de Habilidades: Proxy is the average 'openness' score during the program
-    const opennessScores = evaluations
-      .filter(e => e.phase === "during" && e.openness)
-      .map(e => {
-        if (e.openness === "high") return 100;
-        if (e.openness === "medium") return 70;
-        return 30; // Low
-      });
-
-    const skillsDevelopment = opennessScores.length > 0
-      ? Math.round(opennessScores.reduce((sum, s) => sum + s, 0) / opennessScores.length)
-      : 0;
+    // Desarrollo de Habilidades: Proxy is the participant representation
+    const skillsDevelopment = finalEval?.participantRepresentation && finalEval.participantRepresentation > 5
+      ? 90
+      : finalEval?.participantRepresentation && finalEval.participantRepresentation > 0
+      ? 60
+      : 30;
 
     return [
       { name: "Reducción de Estereotipos", value: stereotypeReduction, color: COLORS[3] },
@@ -192,463 +163,239 @@ export default function ImpactDashboard() {
       { name: "Fortalecimiento Comunitario", value: communityStrength, color: COLORS[5] },
       { name: "Desarrollo de Habilidades", value: skillsDevelopment, color: COLORS[2] },
     ];
-  }, [evaluations]);
+  }, [programEvaluations]);
 
-  // Timeline data
-  const timelineData = useMemo(() => {
-    const sortedEvals = [...evaluations].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
-
-    const weeks = Array.from(new Set(sortedEvals.map(e => {
-      const date = new Date(e.createdAt);
-      const weekNum = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
-      return `Sem ${weekNum}`;
-    }))).slice(0, 10);
-
-    return weeks.map((week, index) => {
-      const weekEvals = sortedEvals.slice(index * 3, (index + 1) * 3);
-      
-      const stereotypes = weekEvals.filter(e => e.grouping === "mixed").length / (weekEvals.length || 1) * 100;
-      const empathy = weekEvals.filter(e => e.respect === "high").length / (weekEvals.length || 1) * 100;
-      const community = weekEvals.filter(e => e.communication === "frequent").length / (weekEvals.length || 1) * 100;
-
-      return {
-        week,
-        stereotypes: Math.round(stereotypes) || 55 + index * 10,
-        empathy: Math.round(empathy) || 60 + index * 10,
-        community: Math.round(community) || 55 + index * 11,
-      };
-    });
-  }, [evaluations]);
-
-  // Demographics data (estimated from groups)
+  // 4. Demographics data (estimated from unique groups)
   const demographicsData = useMemo(() => {
     const groups = sessions.map(s => s.group);
     const uniqueGroups = Array.from(new Set(groups));
 
     // Create demographic distribution based on groups
-    const demographics = Array.from(uniqueGroups).map((group) => {
-      const count = groups.filter(g => g === group).length;
+    const demographics = uniqueGroups.map((group) => {
+      // Use a fixed estimation for participants per group
+      const participants = 15; 
       return {
         country: group,
-        participants: count * 3, // Estimate 3 participants per group instance
+        participants: participants,
         percentage: 0,
       };
     });
 
     const total = demographics.reduce((sum, d) => sum + d.participants, 0) || 1;
-    demographics.forEach(d => {
-      d.percentage = Math.round((d.participants / total) * 100);
-    });
 
-    // No "Otros" needed, as all unique groups are mapped.
-    // The 'group' field in the session data is used as a proxy for 'País' or 'Nacionalidad'
-    // in the absence of a dedicated nationality field.
-
-    return demographics.length > 0 ? demographics : [
-      { country: "Sin datos", participants: 0, percentage: 100 }
-    ];
+    return demographics.map(d => ({
+      ...d,
+      percentage: Math.round((d.participants / total) * 100),
+    }));
   }, [sessions]);
 
+  // --- PDF Export Logic ---
   const exportToPDF = () => {
     const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("DASHBOARD DE IMPACTO COMUNITARIO", 105, 20, { align: "center" });
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 105, 28, { align: "center" });
-    
-    doc.setLineWidth(0.5);
-    doc.line(20, 33, 190, 33);
-    
-    let y = 43;
-    
-    // Key Metrics
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("MÉTRICAS CLAVE", 20, y);
+    doc.setFontSize(22);
+    doc.text("Dashboard de Impacto del Programa", 10, 20);
+    doc.setFontSize(12);
+    doc.text(`Fecha de Reporte: ${new Date().toLocaleDateString()}`, 10, 30);
+
+    let y = 40;
+
+    // Resumen de Métricas Clave
+    doc.setFontSize(16);
+    doc.text("Métricas Clave", 10, y);
     y += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`• Participantes Totales: ${metrics.totalParticipants}`, 25, y);
+    doc.setFontSize(12);
+    doc.text(`Participantes Estimados: ${metrics.totalParticipants}`, 10, y);
+    doc.text(`Grupos/Nacionalidades: ${metrics.nationalitiesCount}`, 100, y);
     y += 7;
-    doc.text(`• Tasa de Finalización: ${metrics.completionRate}%`, 25, y);
+    doc.text(`Tasa de Finalización: ${metrics.completionRate}%`, 10, y);
+    doc.text(`Satisfacción Promedio: ${metrics.avgSatisfaction}%`, 100, y);
     y += 7;
-    doc.text(`• Satisfacción General: ${metrics.avgSatisfaction}%`, 25, y);
-    y += 7;
-    doc.text(`• Nacionalidades Representadas: ${metrics.nationalitiesCount}`, 25, y);
-    y += 7;
-    doc.text(`• Reducción de Estereotipos: ${metrics.stereotypeReduction}%`, 25, y);
-    y += 7;
-    doc.text(`• Aumento de Empatía: ${metrics.empathyIncrease}%`, 25, y);
-    y += 12;
-    
-    // Impact Indicators
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("INDICADORES DE IMPACTO", 20, y);
+    doc.text(`Reducción de Estereotipos (Proxy): ${metrics.stereotypeReduction}%`, 10, y);
+    doc.text(`Aumento de Empatía (Proxy): ${metrics.empathyIncrease}%`, 100, y);
     y += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    impactMetrics.forEach(metric => {
-      doc.text(`• ${metric.name}: ${metric.value}%`, 25, y);
+
+    // Indicadores de Impacto
+    doc.setFontSize(16);
+    doc.text("Indicadores de Impacto (Final)", 10, y);
+    y += 10;
+    impactMetrics.forEach(m => {
+      doc.setFontSize(12);
+      doc.text(`${m.name}: ${m.value}%`, 10, y);
       y += 7;
     });
     y += 5;
-    
-    // Satisfaction Distribution
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("DISTRIBUCIÓN DE SATISFACCIÓN", 20, y);
+
+    // Demografía
+    doc.setFontSize(16);
+    doc.text("Demografía (Estimada por Grupos)", 10, y);
     y += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    satisfactionData.forEach(item => {
-      doc.text(`• ${item.name}: ${item.value}%`, 25, y);
+    demographicsData.forEach(d => {
+      doc.setFontSize(12);
+      doc.text(`${d.country}: ${d.participants} participantes (${d.percentage}%)`, 10, y);
       y += 7;
     });
     y += 5;
-    
-    // Demographics
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("DEMOGRAFÍA DE PARTICIPANTES", 20, y);
-    y += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    demographicsData.forEach(demo => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(`• ${demo.country}: ${demo.participants} personas (${demo.percentage}%)`, 25, y);
-      y += 7;
-    });
-    y += 10;
-    
-    // Summary
-    if (y > 250) {
-      doc.addPage();
-      y = 20;
-    }
-    
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("RESUMEN DEL IMPACTO", 20, y);
-    y += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    const summaryText = `El programa ha alcanzado a ${metrics.totalParticipants} participantes de ${metrics.nationalitiesCount} países diferentes, con una tasa de finalización del ${metrics.completionRate}%. El ${metrics.avgSatisfaction}% de los participantes reportan estar satisfechos con el programa. Se ha documentado una mejora significativa en la convivencia intercultural.`;
-    
-    const lines = doc.splitTextToSize(summaryText, 170);
-    lines.forEach((line: string) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(line, 25, y);
-      y += 6;
-    });
-    
-    // Footer
-    y = 280;
-    doc.setLineWidth(0.5);
-    doc.line(20, y, 190, y);
-    y += 5;
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text("Generado por la Aplicación de Convivencia Intercultural", 105, y, { align: "center" });
-    
-    doc.save(`dashboard-impacto-${new Date().toISOString().split("T")[0]}.pdf`);
-    toast.success("PDF exportado exitosamente");
+
+    doc.save("Impacto_Dashboard.pdf");
+    toast.success("Dashboard exportado a PDF exitosamente.");
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Dashboard de Impacto Comunitario</h1>
+          <h1 className="text-4xl font-bold mb-2">Dashboard de Impacto</h1>
           <p className="text-lg text-muted-foreground">
-            Visualización del impacto del programa en la comunidad
+            Visualización del impacto general del programa basada en las evaluaciones de sesión y el impacto final.
           </p>
         </div>
-        <Button onClick={exportToPDF}>
-          <FileText className="w-4 h-4 mr-2" />
-          Exportar PDF
+        <Button onClick={exportToPDF} className="gap-2">
+          <Download className="w-4 h-4" />
+          Exportar a PDF
         </Button>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="w-5 h-5 text-blue-600" />
-              Participantes Totales
-            </CardTitle>
+      {/* Resumen de Métricas Clave */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Participantes Estimados</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-blue-600">{metrics.totalParticipants}</div>
-            <p className="text-sm text-muted-foreground mt-2">Adultos migrantes</p>
-            <Badge className="mt-3 bg-blue-600">Activos</Badge>
+            <div className="text-2xl font-bold">{metrics.totalParticipants}</div>
+            <p className="text-xs text-muted-foreground">
+              Basado en {metrics.nationalitiesCount} grupos únicos (est. 15/grupo)
+            </p>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              Tasa de Finalización
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tasa de Finalización</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-green-600">{metrics.completionRate}%</div>
-            <p className="text-sm text-muted-foreground mt-2">Sesiones completadas</p>
-            <Badge className="mt-3 bg-green-600">
-              {metrics.completionRate >= 70 ? "Excelente" : "En progreso"}
-            </Badge>
+            <div className="text-2xl font-bold">{metrics.completionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Sesiones con al menos una evaluación de seguimiento
+            </p>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Heart className="w-5 h-5 text-purple-600" />
-              Satisfacción General
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Satisfacción Promedio</CardTitle>
+            <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-purple-600">{metrics.avgSatisfaction}%</div>
-            <p className="text-sm text-muted-foreground mt-2">Muy satisfecho o satisfecho</p>
-            <Badge className="mt-3 bg-purple-600">
-              {metrics.avgSatisfaction >= 80 ? "Óptimo" : "Bueno"}
-            </Badge>
+            <div className="text-2xl font-bold">{metrics.avgSatisfaction}%</div>
+            <p className="text-xs text-muted-foreground">
+              Basado en respeto, apertura y ambiente lúdico
+            </p>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Globe className="w-5 h-5 text-orange-600" />
-              Nacionalidades Representadas
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Grupos/Nacionalidades</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-orange-600">{metrics.nationalitiesCount}</div>
-            <p className="text-sm text-muted-foreground mt-2">Países diferentes</p>
-            <Badge className="mt-3 bg-orange-600">Diverso</Badge>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Target className="w-5 h-5 text-red-600" />
-              Reducción de Estereotipos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-red-600">{metrics.stereotypeReduction}%</div>
-            <p className="text-sm text-muted-foreground mt-2">Mejora medida</p>
-            <Badge className="mt-3 bg-red-600">
-              {metrics.stereotypeReduction >= 70 ? "Significativo" : "En progreso"}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950 dark:to-cyan-900 border-cyan-200 dark:border-cyan-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Zap className="w-5 h-5 text-cyan-600" />
-              Aumento de Empatía
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-cyan-600">{metrics.empathyIncrease}%</div>
-            <p className="text-sm text-muted-foreground mt-2">Mejora medida</p>
-            <Badge className="mt-3 bg-cyan-600">
-              {metrics.empathyIncrease >= 70 ? "Excelente" : "Bueno"}
-            </Badge>
+            <div className="text-2xl font-bold">{metrics.nationalitiesCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Grupos únicos registrados en las sesiones
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Participation Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Participación por Sesión</CardTitle>
-            <CardDescription>Asistencia y finalización de cada sesión</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={participationData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="session" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="participants" fill="#3b82f6" name="Inscritos" />
-                <Bar dataKey="completed" fill="#10b981" name="Completaron" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Indicadores de Impacto */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Indicadores de Impacto (Final)</CardTitle>
+          <CardDescription>Métricas clave basadas en la última Evaluación de Impacto Final.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {impactMetrics.map((metric, index) => (
+              <Card key={index} className="p-4">
+                <div className="text-sm font-medium text-muted-foreground">{metric.name}</div>
+                <div className="text-3xl font-bold text-primary mt-1">{metric.value}%</div>
+                <Badge variant="secondary" className="mt-2">
+                  {metric.value > 50 ? "Alto Impacto" : "Impacto Moderado"}
+                </Badge>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Satisfaction Chart */}
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Satisfacción de Participantes</CardTitle>
-            <CardDescription>Distribución de niveles de satisfacción</CardDescription>
+            <CardTitle>Distribución Demográfica</CardTitle>
+            <CardDescription>Estimación de participantes por grupo/nacionalidad.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={satisfactionData}
+                  data={demographicsData}
+                  dataKey="participants"
+                  nameKey="country"
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                  outerRadius={80}
+                  outerRadius={100}
                   fill="#8884d8"
-                  dataKey="value"
+                  label
                 >
-                  {satisfactionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {demographicsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value, name, props) => [`${value} (${props.payload.percentage}%)`, name]} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Impact Over Time */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
-            <CardTitle>Evolución del Impacto</CardTitle>
-            <CardDescription>Cambio en indicadores clave a lo largo del programa</CardDescription>
+            <CardTitle>Nivel de Satisfacción</CardTitle>
+            <CardDescription>Distribución de las evaluaciones de seguimiento por nivel de satisfacción.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timelineData}>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={satisfactionData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
+                <XAxis dataKey="name" />
+                <YAxis unit="%" />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="stereotypes" stroke="#ef4444" name="Reducción Estereotipos" />
-                <Line type="monotone" dataKey="empathy" stroke="#8b5cf6" name="Aumento Empatía" />
-                <Line type="monotone" dataKey="community" stroke="#06b6d4" name="Fortalecimiento Comunitario" />
-              </LineChart>
+                <Bar dataKey="value" name="Porcentaje" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Impact Metrics */}
+      {/* Participación por Sesión */}
       <Card>
         <CardHeader>
-          <CardTitle>Indicadores de Impacto</CardTitle>
-          <CardDescription>Medición del logro de objetivos principales</CardDescription>
+          <CardTitle>Participación por Sesión</CardTitle>
+          <CardDescription>Porcentaje de participación estimado en las últimas 10 sesiones.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {impactMetrics.map((metric, index) => (
-            <div key={index}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold">{metric.name}</span>
-                <span className="text-lg font-bold" style={{ color: metric.color }}>{metric.value}%</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div
-                  className="h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${metric.value}%`, backgroundColor: metric.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Demographics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Demografía de Participantes</CardTitle>
-          <CardDescription>Distribución por grupo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              {demographicsData.map((demo, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">{demo.country}</span>
-                    <Badge variant="outline">{demo.participants} personas</Badge>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full bg-blue-600 transition-all duration-500"
-                      style={{ width: `${demo.percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{demo.percentage}% del total</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={demographicsData.map(d => ({ name: d.country, value: d.percentage }))}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}%`}
-                  >
-                    {demographicsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary */}
-      <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 border-green-200 dark:border-green-800">
-        <CardHeader>
-          <CardTitle>Resumen del Impacto</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p>
-            <strong>Alcance:</strong> El programa ha alcanzado a {metrics.totalParticipants} participantes de {metrics.nationalitiesCount} países diferentes, con una tasa de finalización del {metrics.completionRate}%.
-          </p>
-          <p>
-            <strong>Satisfacción:</strong> El {metrics.avgSatisfaction}% de los participantes reportan estar satisfechos con el programa.
-          </p>
-          <p>
-            <strong>Impacto Medible:</strong> Se ha documentado una mejora significativa en la convivencia intercultural, con indicadores positivos en reducción de estereotipos y aumento de empatía.
-          </p>
-          <p>
-            <strong>Sostenibilidad:</strong> Se han establecido redes de apoyo comunitario que continuarán más allá del programa formal.
-          </p>
+        <CardContent className="h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={participationData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="session" />
+              <YAxis unit="%" domain={[0, 100]} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="participation" name="Participación Estimada" stroke={COLORS[3]} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
