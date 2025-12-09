@@ -171,6 +171,48 @@ export function useEvaluationData() {
     URL.revokeObjectURL(url);
   }, [evaluations, sessions]);
 
+  // Export data as JSON
+  const exportAsJSON = useCallback(() => {
+    const data = {
+      sessions: sessions,
+      evaluations: evaluations,
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `convivencia_data_backup_${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [sessions, evaluations]);
+
+  // Import data from JSON
+  const importFromJSON = useCallback(
+    (jsonString: string) => {
+      try {
+        const data = JSON.parse(jsonString);
+        if (data.sessions && Array.isArray(data.sessions) && data.evaluations && Array.isArray(data.evaluations)) {
+          // Simple validation to ensure data structure is correct
+          if (data.sessions.every((s: any) => s.id && s.date) && data.evaluations.every((e: any) => e.id && e.sessionId)) {
+            saveSessions(data.sessions);
+            saveEvaluations(data.evaluations);
+            return { success: true, message: "Datos importados correctamente." };
+          } else {
+            return { success: false, message: "Estructura de datos JSON inválida." };
+          }
+        } else {
+          return { success: false, message: "El archivo JSON debe contener 'sessions' y 'evaluations'." };
+        }
+      } catch (error) {
+        console.error("Error importing data:", error);
+        return { success: false, message: "Error al parsear el archivo JSON." };
+      }
+    },
+    [saveSessions, saveEvaluations]
+  );
+
   return {
     sessions,
     evaluations,
@@ -182,5 +224,7 @@ export function useEvaluationData() {
     deleteEvaluation,
     getSessionEvaluations,
     exportAsCSV,
+    exportAsJSON,
+    importFromJSON,
   };
 }

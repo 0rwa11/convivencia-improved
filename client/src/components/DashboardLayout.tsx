@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/dashboard">
+                  <Link href="/trabajo/grupos">
                     <a className="cursor-pointer">Dashboard de Grupos</a>
                   </Link>
                 </DropdownMenuItem>
@@ -259,7 +259,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   Análisis Comparativo
                 </a>
               </Link>
-              <Link href="/trabajo/dashboard">
+              <Link href="/trabajo/grupos">
                 <a
                   className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                   onClick={() => setMobileMenuOpen(false)}

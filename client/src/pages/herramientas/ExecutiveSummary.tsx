@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEvaluationData } from "@/hooks/useEvaluationData";
 import { Download, FileText, TrendingUp, Users, Calendar, BarChart3, CheckCircle2, AlertCircle } from "lucide-react";
+import DataManagement from "@/components/DataManagement";
 
 export default function ExecutiveSummary() {
   const { sessions, evaluations } = useEvaluationData();
@@ -108,6 +109,7 @@ Generado por la Aplicación de Convivencia Intercultural
 
   return (
     <div className="space-y-6">
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold mb-2">Resumen Ejecutivo</h1>
@@ -329,6 +331,7 @@ Generado por la Aplicación de Convivencia Intercultural
           )}
         </CardContent>
       </Card>
+      <DataManagement />
     </div>
   );
 }
