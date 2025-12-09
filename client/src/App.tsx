@@ -41,6 +41,7 @@ import AnalyticsPage from "./pages/herramientas/AnalyticsPage";
 import SessionReports from "./pages/herramientas/SessionReports";
 import ResourceLibrary from "./pages/herramientas/ResourceLibrary";
 import FacilitatorChecklist from "./pages/herramientas/FacilitatorChecklist";
+import ImpactDashboard from "./pages/herramientas/ImpactDashboard";
 
 // Custom NavLink component
 const NavLink = ({ href, className, onClick, children }: any) => {
@@ -160,6 +161,9 @@ function Header() {
               <DropdownMenuItem asChild>
                 <NavLink href="/herramientas/checklist" className="cursor-pointer">Checklist del Facilitador</NavLink>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink href="/herramientas/impacto" className="cursor-pointer">Dashboard de Impacto</NavLink>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -233,6 +237,7 @@ function Header() {
             <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
             <NavLink href="/herramientas/biblioteca" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Biblioteca de Recursos</NavLink>
             <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
+            <NavLink href="/herramientas/impacto" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Impacto</NavLink>
           </div>
         </div>
       )}
@@ -268,6 +273,7 @@ function Router() {
       <Route path={"herramientas/reportes"} component={SessionReports} />
       <Route path={"herramientas/biblioteca"} component={ResourceLibrary} />
       <Route path={"herramientas/checklist"} component={FacilitatorChecklist} />
+      <Route path={"herramientas/impacto"} component={ImpactDashboard} />
       
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
