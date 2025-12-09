@@ -1,4 +1,4 @@
-const CACHE_NAME = 'convivencia-cache-v1';
+const CACHE_NAME = 'convivencia-cache-v2'; // Increment version to force update
 const urlsToCache = [
   '/convivencia-improved/',
   '/convivencia-improved/index.html',
