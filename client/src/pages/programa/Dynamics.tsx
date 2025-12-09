@@ -79,7 +79,6 @@ export default function Dynamics() {
         "Diálogo respetuoso sin conflictos"
       ],
       pdfLinks: [
-        { name: "Afirmaciones Termómetro", file: "S1_Termometro_Afirmaciones.pdf" },
         { name: "Carteles Termómetro", file: "D4_Carteles_Termometro.pdf" },
         { name: "Tarjetas Estereotipos", file: "D4_Termometro_Estereotipo_Tarjetas.pdf" }
       ]
@@ -88,37 +87,37 @@ export default function Dynamics() {
       id: "d3",
       code: "D2.1",
       session: 2,
-      title: "Historias de Vida y Empatía",
-      objective: "Promover la empatía a través del conocimiento de historias personales, reducir distancia emocional entre participantes",
-      duration: "45 minutos",
+      title: "El Semáforo Cultural",
+      objective: "Identificar y respetar diferencias culturales en normas de convivencia cotidiana sin juzgamientos",
+      duration: "35 minutos",
       participants: "15-20 personas",
       materials: [
-        "Tarjetas con preguntas sobre historias de vida",
-        "Papel y bolígrafos",
-        "Música suave (opcional)"
+        "3 carteles grandes: 'NORMAL EN MI CULTURA' (verde), 'DEPENDE' (amarillo), 'POCO COMÚN' (rojo)",
+        "40 comportamientos/frases preparadas",
+        "Marcadores"
       ],
       phases: [
         {
           name: "Preparación",
           time: "5 min",
-          description: "Se forma parejas de participantes de diferentes nacionalidades. El facilitador explica: 'Van a compartir una historia personal importante. Pueden hablar sobre: un momento feliz, un desafío que superaron, algo que aprendieron, una persona importante en sus vidas.'"
+          description: "El facilitador coloca los 3 carteles en 3 puntos de la sala. Explica: 'Voy a leer comportamientos o formas de actuar. Ustedes van a decir si es normal, depende, o poco común en su cultura: VERDE: Normal en mi cultura, AMARILLO: Depende de la situación, ROJO: Poco común en mi cultura'. Aclara: 'Todas las culturas son válidas. No hay culturas mejores o peores.'"
         },
         {
           name: "Desarrollo",
-          time: "30 min",
-          description: "Cada pareja se sienta frente a frente. Una persona cuenta su historia (10 min), la otra escucha activamente sin interrumpir. Luego intercambian roles. El facilitador circula para apoyar y crear un ambiente seguro."
+          time: "25 min",
+          description: "El facilitador lee el primer comportamiento (ej. 'Hablar fuerte en grupo'). Todos se mueven hacia el cartel que corresponde. El facilitador pregunta a 2-3 personas: '¿Por qué elegiste este cartel? ¿Cómo es en tu cultura?'. Se genera breve diálogo. Se repite con 10-12 comportamientos."
         },
         {
-          name: "Reflexión Grupal",
-          time: "10 min",
-          description: "Se reúne el grupo. Se invita a voluntarios a compartir lo que aprendieron de la historia de su pareja. Se destaca: 'Aunque somos de diferentes países, nuestras historias humanas son similares. Todos tenemos alegrías, desafíos y personas que amamos.'"
+          name: "Reflexión",
+          time: "5 min",
+          description: "Facilitador: 'Vimos que hay muchas formas diferentes de hacer las cosas. Todas son válidas. En el centro, necesitamos respetar estas diferencias.'"
         }
       ],
       successIndicators: [
-        "100% de participantes comparten una historia",
-        "Conexión emocional visible entre parejas",
-        "Participantes expresan empatía y comprensión",
-        "Reducción de barreras de lenguaje o culturales"
+        "80%+ participación activa",
+        "Grupos mixtos en cada cartel",
+        "Diálogo respetuoso",
+        "Reconocimiento de validez de diferentes culturas"
       ],
       pdfLinks: []
     },
@@ -126,77 +125,85 @@ export default function Dynamics() {
       id: "d4",
       code: "D2.2",
       session: 2,
-      title: "Mapa de Sueños Compartidos",
-      objective: "Identificar objetivos y sueños comunes, fortalecer la visión colectiva de la comunidad",
-      duration: "40 minutos",
+      title: "La Maleta Común",
+      objective: "Deconstruir estereotipos negativos y reconocer cualidades humanas compartidas",
+      duration: "35 minutos",
       participants: "15-20 personas",
       materials: [
-        "Cartulina grande (1m x 1.5m)",
-        "Marcadores de colores",
-        "Pegatinas o post-its",
-        "Imágenes recortadas de revistas"
+        "1 maleta o mochila (real o representada con papel)",
+        "40 estereotipos negativos (tarjetas)",
+        "40 cualidades positivas (tarjetas)",
+        "Papel grande (A2) para crear un 'mural de cualidades'",
+        "Marcadores"
       ],
       phases: [
         {
-          name: "Inspiración",
+          name: "Desempacar Estereotipos",
+          time: "15 min",
+          description: "El facilitador presenta la maleta: 'Esta maleta está llena de cosas que la gente dice sobre migrantes. Vamos a desempacar y tirar lo que no queremos.' Lee un estereotipo en voz alta (ej. 'Los migrantes solo quieren dinero'). Pregunta: '¿Es verdad? ¿Alguien aquí solo quiere dinero? ¿O quieren otras cosas también?'. Genera breve diálogo (1-2 min). Hace un gesto simbólico de 'tirar' el estereotipo. Repite con 8-10 estereotipos."
+        },
+        {
+          name: "Reempacar Cualidades",
+          time: "15 min",
+          description: "El facilitador dice: 'Ahora vamos a llenar la maleta con cosas REALES que ustedes traen.' Lee una cualidad positiva (ej. 'Mi sonrisa', 'Mi fuerza', 'Mi esperanza'). Pregunta: '¿Quién trae esto al centro? ¿Todos?'. Genera breve diálogo. Hace gesto simbólico de 'meter' la cualidad en la maleta. Repite con 8-10 cualidades."
+        },
+        {
+          name: "Cierre",
           time: "5 min",
-          description: "El facilitador pregunta: '¿Cuál es tu sueño para los próximos 5 años?' Cada persona piensa en su respuesta. Se pueden dar ejemplos: educación, trabajo, familia, salud, comunidad."
-        },
-        {
-          name: "Creación Colectiva",
-          time: "25 min",
-          description: "Todos los participantes escriben o dibujan su sueño en una pegatina y la colocan en el mapa grande. Se agrupan por temas: educación, trabajo, familia, comunidad. El facilitador ayuda a identificar patrones y sueños compartidos."
-        },
-        {
-          name: "Visualización",
-          time: "10 min",
-          description: "Se observa el mapa completo. El facilitador destaca: 'Vemos que aunque somos de diferentes países, compartimos sueños similares: queremos educación, trabajo digno, familias felices, comunidades seguras. Eso nos une.'"
+          description: "El facilitador cierra la maleta: 'La maleta ahora está llena de lo que REALMENTE ustedes traen. Eso es lo importante.' Opcionalmente, se crea un mural con las cualidades identificadas."
         }
       ],
       successIndicators: [
-        "100% de participantes contribuye con su sueño",
-        "Identificación clara de sueños compartidos",
-        "Visión colectiva de comunidad fortalecida",
-        "Motivación y esperanza visible"
+        "Participación activa en gestos simbólicos",
+        "Diálogo reflexivo sobre estereotipos vs. realidad",
+        "Mínimo 30 cualidades positivas identificadas",
+        "Ambiente de celebración y reconocimiento"
       ],
-      pdfLinks: []
+      pdfLinks: [
+        { name: "Estereotipos Flashcards", file: "D3_Maleta_Estereotipos_Flashcards.pdf" },
+        { name: "Maleta Común Lista", file: "D3_Maleta_Comun_Lista.pdf" }
+      ]
     },
     {
       id: "d5",
       code: "D3.1",
       session: 3,
-      title: "Compromiso de Acción Comunitaria",
-      objective: "Transformar reflexiones en acciones concretas, crear compromisos para fortalecer la comunidad",
-      duration: "50 minutos",
+      title: "El Mercado Cultural",
+      objective: "Reconocer y compartir habilidades, conocimientos y recursos disponibles en el grupo",
+      duration: "35 minutos",
       participants: "15-20 personas",
       materials: [
-        "Tarjetas de compromiso",
-        "Bolígrafos",
-        "Caja de compromisos",
-        "Certificados de participación"
+        "3-4 mesas o espacios 'puestos'",
+        "Carteles para identificar puestos (por nacionalidad o por tipo de habilidad)",
+        "Marcadores"
       ],
       phases: [
         {
-          name: "Reflexión Final",
+          name: "Preparación",
+          time: "5 min",
+          description: "El facilitador explica: 'Vamos a crear un mercado. Cada nacionalidad (o grupo) va a tener un 'puesto' donde enseña algo de su cultura o sus habilidades.' Forma grupos por nacionalidad (o mezcla si hay pocos). Asigna un espacio/mesa a cada grupo."
+        },
+        {
+          name: "Preparación de Puestos",
           time: "10 min",
-          description: "El facilitador resume lo aprendido en las 3 sesiones: 'Descubrimos que compartimos más de lo que nos diferencia. Vimos nuestras historias, nuestros sueños. Ahora es momento de actuar.'"
+          description: "Cada grupo prepara su puesto con: Un gesto típico de su cultura, Una palabra importante en su idioma, Una costumbre o tradición, Una habilidad que tienen (cocinar, reparar, enseñar, etc.). El facilitador ayuda a cada grupo a preparar."
         },
         {
-          name: "Definición de Compromisos",
-          time: "25 min",
-          description: "Cada participante escribe un compromiso personal: '¿Qué voy a hacer para fortalecer esta comunidad?' Puede ser: apoyar a un compañero, organizar un evento, enseñar mi idioma, compartir mi cultura, etc. Se recopilan en una caja."
-        },
-        {
-          name: "Celebración y Cierre",
+          name: "Visita de Puestos",
           time: "15 min",
-          description: "Se leen algunos compromisos en voz alta. Se entregan certificados de participación. Se celebra el logro colectivo. Se toma una foto grupal. Se intercambian contactos para mantener la red."
+          description: "Los participantes se dividen en grupos pequeños. Rotan por cada puesto (3-4 min por puesto). En cada puesto, el grupo que lo atiende enseña su gesto, palabra, costumbre y habilidad. Hay interacción, preguntas, risas."
+        },
+        {
+          name: "Cierre",
+          time: "5 min",
+          description: "Facilitador: 'Vimos que cada grupo trae algo valioso. Cuando compartimos, el centro se enriquece.'"
         }
       ],
       successIndicators: [
-        "100% de participantes define un compromiso",
-        "Compromisos son específicos y realizables",
-        "Ambiente de celebración y esperanza",
-        "Red de contactos establecida"
+        "100% de participantes visita al menos 2 puestos",
+        "Interacciones lúdicas y respetuosas",
+        "Cada grupo presenta su aporte con orgullo",
+        "Ambiente de celebración"
       ],
       pdfLinks: []
     },
@@ -204,189 +211,229 @@ export default function Dynamics() {
       id: "d6",
       code: "D3.2",
       session: 3,
-      title: "Red de Apoyo Mutuo",
-      objective: "Crear una red de apoyo sostenible, fortalecer vínculos duraderos entre participantes",
+      title: "El Árbol de la Contribución Colectiva",
+      objective: "Crear un producto colectivo que visualiza cómo cada persona aporta al bienestar del centro",
       duration: "35 minutos",
       participants: "15-20 personas",
       materials: [
-        "Hilo o cuerda de colores",
-        "Tarjetas con datos de contacto",
-        "Teléfono o aplicación de mensajería grupal",
-        "Calendario de encuentros futuros"
+        "Papel grande (A1-A2) con árbol pre-dibujado",
+        "Marcadores de colores",
+        "Témperas",
+        "Símbolos/imágenes de recursos (trabajo, familia, amistad, alegría, etc.)"
       ],
       phases: [
         {
-          name: "Construcción de la Red",
-          time: "15 min",
-          description: "Los participantes se colocan en círculo. Se pasa una cuerda de un participante a otro, creando una red física. Cada persona que recibe la cuerda dice: 'Yo apoyo a esta comunidad en...' (educación, trabajo, idioma, etc.). Se crea una red visible de apoyo mutuo."
+          name: "Presentación",
+          time: "5 min",
+          description: "El facilitador presenta el árbol: 'Este árbol representa nuestro centro. Las raíces son lo que necesitamos. Los frutos son lo que cada uno aporta.' Explica: 'Vamos a llenar este árbol juntos.'"
         },
         {
-          name: "Intercambio de Contactos",
-          time: "12 min",
-          description: "Se intercambian números de teléfono, correos electrónicos, redes sociales. Se crea un grupo de WhatsApp o Telegram para mantener la comunicación. Se establece un calendario de encuentros mensuales."
+          name: "Identificar Raíces",
+          time: "10 min",
+          description: "Facilitador pregunta: '¿Qué necesita el centro para funcionar bien?' Participantes responden (respeto, confianza, comunicación, alegría, etc.). El facilitador (o participantes voluntarios) escriben/dibujan estas necesidades en las raíces. Se colorean."
         },
         {
-          name: "Compromiso Grupal",
-          time: "8 min",
-          description: "Todos repiten juntos: 'Somos una comunidad. Nos apoyamos mutuamente. Juntos somos más fuertes.' Se toma una foto de la red de cuerda como símbolo del compromiso."
+          name: "Identificar Frutos",
+          time: "10 min",
+          description: "Facilitador pregunta: '¿Qué aporta cada uno de ustedes al centro?' Participantes responden (sonrisa, fuerza, conocimiento, ayuda, etc.). El facilitador (o participantes) escriben/dibujan en los frutos. Se colorean. Cada participante puede poner su nombre o símbolo en un fruto."
+        },
+        {
+          name: "Cierre",
+          time: "10 min",
+          description: "El árbol está completo. Facilitador: 'Miren lo que hemos creado juntos. Este árbol es hermoso porque tiene muchos colores, muchas formas, muchas voces. Así es el centro cuando trabajamos juntos.' Se toma foto del árbol. Se expone en el centro como recordatorio."
         }
       ],
       successIndicators: [
-        "100% de participantes intercambia contacto",
-        "Grupo de comunicación establecido",
-        "Encuentros futuros programados",
-        "Sentido de pertenencia a una comunidad"
+        "Árbol completo con raíces y frutos",
+        "Participación de 80%+ en la creación",
+        "Diversidad visual (colores, formas, idiomas)",
+        "Cada participante se siente representado"
       ],
-      pdfLinks: []
+      pdfLinks: [
+        { name: "Árbol Contribución Plantilla", file: "D10_Arbol_Contribucion_Plantilla.pdf" }
+      ]
     }
   ];
 
-  const sessionGroups = {
-    1: dynamics.filter(d => d.session === 1),
-    2: dynamics.filter(d => d.session === 2),
-    3: dynamics.filter(d => d.session === 3)
-  };
+  const sessions = [
+    {
+      number: 1,
+      title: "Conocernos sin Juicios",
+      objective: "Romper el hielo, empezar a cuestionar estereotipos sobre nacionalidades presentes en el centro",
+      duration: "90 minutos"
+    },
+    {
+      number: 2,
+      title: "Entender Nuestras Diferencias",
+      objective: "Explorar diferencias culturales en comportamientos cotidianos, identificar cualidades compartidas",
+      duration: "90 minutos"
+    },
+    {
+      number: 3,
+      title: "Construir Juntos",
+      objective: "Visualizar cómo cada persona aporta al centro, crear un producto colectivo que celebra la diversidad",
+      duration: "90 minutos"
+    }
+  ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Dinámicas Detalladas</h1>
+        <h1 className="text-4xl font-bold mb-2">Las 6 Dinámicas del Programa</h1>
         <p className="text-lg text-muted-foreground">
-          6 dinámicas participativas diseñadas para las 3 sesiones del programa
+          Descripción detallada de cada dinámica, sus objetivos, materiales y fases de desarrollo
         </p>
-        <div className="mt-6 grid md:grid-cols-3 gap-4">
-          <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="w-5 h-5 text-blue-600" />
-                Sesión 1: Encuentro
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              2 dinámicas para romper el hielo y cuestionar estereotipos
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-green-600" />
-                Sesión 2: Empatía
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              2 dinámicas para conectar historias y sueños compartidos
-            </CardContent>
-          </Card>
-          <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="w-5 h-5 text-purple-600" />
-                Sesión 3: Acción
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              2 dinámicas para crear compromisos y redes de apoyo
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
-      <Accordion type="single" collapsible className="space-y-4">
-        {dynamics.map((dynamic) => (
-          <AccordionItem key={dynamic.id} value={dynamic.id} className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-4 text-left flex-1">
-                <Badge variant={dynamic.session === 1 ? "default" : dynamic.session === 2 ? "secondary" : "outline"}>
-                  {dynamic.code}
+      <div className="grid gap-6">
+        {sessions.map((session) => (
+          <Card key={session.number} className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-2xl">Sesión {session.number}: {session.title}</CardTitle>
+                  <CardDescription className="mt-2">{session.objective}</CardDescription>
+                </div>
+                <Badge variant="default" className="whitespace-nowrap">
+                  <Clock className="w-4 h-4 mr-1" />
+                  {session.duration}
                 </Badge>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{dynamic.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{dynamic.duration} • {dynamic.participants}</p>
-                </div>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-6 pt-4">
-              <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">
-                <Target className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold mb-1">Objetivo</p>
-                  <p className="text-sm">{dynamic.objective}</p>
-                </div>
-              </div>
+            </CardHeader>
 
-              <div>
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Fases de la Dinámica
-                </h4>
-                <div className="space-y-4">
-                  {dynamic.phases.map((phase, idx) => (
-                    <div key={idx} className="border-l-4 border-blue-600 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold">{phase.name}</span>
-                        <Badge variant="outline">{phase.time}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{phase.description}</p>
-                    </div>
+            <CardContent className="pt-6">
+              <Accordion type="single" collapsible className="space-y-4">
+                {dynamics
+                  .filter(d => d.session === session.number)
+                  .map((dynamic) => (
+                    <AccordionItem key={dynamic.id} value={dynamic.id} className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3 text-left">
+                          <Badge variant="outline">{dynamic.code}</Badge>
+                          <div>
+                            <h3 className="font-semibold">{dynamic.title}</h3>
+                            <p className="text-sm text-muted-foreground">{dynamic.objective}</p>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+
+                      <AccordionContent className="space-y-6 pt-4">
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-blue-600" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Duración</p>
+                              <p className="font-semibold">{dynamic.duration}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-5 h-5 text-green-600" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Participantes</p>
+                              <p className="font-semibold">{dynamic.participants}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Target className="w-5 h-5 text-purple-600" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Objetivo</p>
+                              <p className="font-semibold text-sm">{dynamic.objective}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            <BookOpen className="w-4 h-4" />
+                            Materiales Necesarios
+                          </h4>
+                          <ul className="space-y-2">
+                            {dynamic.materials.map((material, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm">
+                                <span className="text-muted-foreground">•</span>
+                                <span>{material}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold mb-3">Fases de Desarrollo</h4>
+                          <div className="space-y-4">
+                            {dynamic.phases.map((phase, idx) => (
+                              <div key={idx} className="border-l-4 border-blue-600 pl-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-semibold">{phase.name}</h5>
+                                  <Badge variant="secondary">{phase.time}</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{phase.description}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            Indicadores de Éxito
+                          </h4>
+                          <ul className="space-y-2">
+                            {dynamic.successIndicators.map((indicator, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm">
+                                <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span>{indicator}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {dynamic.pdfLinks.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              <Download className="w-4 h-4" />
+                              Recursos Descargables
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {dynamic.pdfLinks.map((link, idx) => (
+                                <Button key={idx} variant="outline" size="sm" className="gap-2">
+                                  <Download className="w-4 h-4" />
+                                  {link.name}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
                   ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Indicadores de Éxito
-                </h4>
-                <ul className="space-y-2">
-                  {dynamic.successIndicators.map((indicator, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>{indicator}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {dynamic.pdfLinks.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Download className="w-4 h-4" />
-                    Recursos Descargables
-                  </h4>
-                  <div className="space-y-2">
-                    {dynamic.pdfLinks.map((link, idx) => (
-                      <Button key={idx} variant="outline" size="sm" className="w-full justify-start">
-                        <Download className="w-4 h-4 mr-2" />
-                        {link.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
         ))}
-      </Accordion>
+      </div>
 
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-blue-200 dark:border-blue-800">
+      <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border-amber-200 dark:border-amber-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5" />
-            Notas para Facilitadores
+            Notas Importantes para Facilitadores
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>
-            <strong>Adaptabilidad:</strong> Todas las dinámicas pueden adaptarse según el tamaño del grupo, el idioma y el contexto cultural.
+            <strong>Flexibilidad:</strong> Si un grupo termina antes, se puede extender el diálogo o añadir preguntas adicionales.
           </p>
           <p>
-            <strong>Seguridad Emocional:</strong> Es fundamental crear un ambiente seguro donde los participantes se sientan cómodos compartiendo.
+            <strong>Seguridad Emocional:</strong> Si alguien se incomoda, se puede ofrecer un rol diferente (ej. ayudar al facilitador).
           </p>
           <p>
-            <strong>Inclusión:</strong> Asegúrese de que todos puedan participar, independientemente de su nivel de idioma o habilidades.
+            <strong>Inclusión:</strong> Asegurar que todas las nacionalidades presentes en el centro sean representadas.
           </p>
           <p>
-            <strong>Seguimiento:</strong> Después de cada sesión, recopile retroalimentación para mejorar futuras dinámicas.
+            <strong>Documentación:</strong> Tomar fotos de productos colectivos para evaluación.
+          </p>
+          <p>
+            <strong>Adaptación:</strong> Las dinámicas pueden ajustarse según las necesidades específicas de cada grupo.
           </p>
         </CardContent>
       </Card>
