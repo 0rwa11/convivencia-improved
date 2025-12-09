@@ -5,6 +5,7 @@ export interface Session {
   date: string;
   facilitator: string;
   group: string;
+  notes?: string; // New field for session planning/management
   createdAt: string;
 }
 

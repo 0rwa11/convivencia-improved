@@ -50,10 +50,11 @@ export default function EvaluationRegistry() {
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const [deleteEvalId, setDeleteEvalId] = useState<string | null>(null);
   const [editingEval, setEditingEval] = useState<EvaluationData | null>(null);
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     facilitator: "",
     group: "",
+    notes: "", // NEW: Add notes field
   });
 
   const handleCreateSession = () => {
@@ -66,6 +67,7 @@ export default function EvaluationRegistry() {
       date: formData.date,
       facilitator: formData.facilitator,
       group: formData.group,
+      notes: formData.notes, // NEW: Pass notes to createSession
     });
 
     toast.success("Sesión creada exitosamente");
@@ -220,6 +222,20 @@ export default function EvaluationRegistry() {
                   className="mt-1"
                 />
               </div>
+              {/* NEW: Notes Field */}
+              <div>
+                <Label htmlFor="notes">Notas de la Sesión</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Ej: Dinámica principal, objetivos de la sesión, etc."
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
               <Button onClick={handleCreateSession} className="w-full">
                 Crear Sesión
               </Button>
@@ -272,6 +288,9 @@ export default function EvaluationRegistry() {
                         <h3 className="font-semibold">{session.group}</h3>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(session.date)} • Facilitador: {session.facilitator}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1 truncate max-w-xs">
+                          Notas: {session.notes || "Sin notas"}
                         </p>
                       </div>
                     </div>

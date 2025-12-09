@@ -9,11 +9,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEvaluationData } from "@/hooks/useEvaluationData";
 import { toast } from "sonner";
-import { Save, FileText } from "lucide-react";
+import { Save, FileText, Zap } from "lucide-react";
 
 export default function Evaluation() {
   const { sessions, createEvaluation } = useEvaluationData();
   const [selectedSession, setSelectedSession] = useState("");
+  const [quickMode, setQuickMode] = useState(false); // NEW: Quick Mode state
   const [phase, setPhase] = useState<"before" | "during" | "after">("before");
   
   // Before phase fields
@@ -38,6 +39,51 @@ export default function Evaluation() {
   const [productsCompleted, setProductsCompleted] = useState("");
   const [participantRepresentation, setParticipantRepresentation] = useState("");
   const [recommendations, setRecommendations] = useState("");
+
+  const handleQuickSubmit = () => {
+    if (!selectedSession) {
+      toast.error("Por favor selecciona una sesión");
+      return;
+    }
+
+    // Logic for Quick Submit: Only fill in the most critical fields based on phase
+    let quickData: any = {
+      sessionId: selectedSession,
+      phase,
+    };
+
+    if (phase === "before") {
+      quickData = {
+        ...quickData,
+        grouping: grouping || "separated", // Default to separated for quick baseline
+        tensions: tensions || "none", // Default to none
+        communication: communication || "limited", // Default to limited
+        mixedInteractions: parseInt(mixedInteractions) || 0,
+      };
+    } else if (phase === "during") {
+      quickData = {
+        ...quickData,
+        participation: participation || "80-99", // Default to good participation
+        respect: respect || "high", // Default to high respect
+        openness: openness || "medium", // Default to medium openness
+        laughter: laughter || "occasional", // Default to occasional laughter
+      };
+    } else if (phase === "after") {
+      quickData = {
+        ...quickData,
+        groupingAfter: groupingAfter || "mixed", // Default to mixed for quick impact
+        mixedInteractionsAfter: parseInt(mixedInteractionsAfter) || 0,
+      };
+    }
+
+    createEvaluation(quickData);
+    toast.success("Evaluación Rápida guardada exitosamente");
+    
+    // Reset form
+    setSelectedSession("");
+    setPhase("before");
+    resetFields();
+  };
 
   const handleSubmit = () => {
     if (!selectedSession) {
@@ -93,11 +139,17 @@ export default function Evaluation() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Formulario de Evaluación</h1>
-        <p className="text-lg text-muted-foreground">
-          Registra observaciones antes, durante y después de cada sesión
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Formulario de Evaluación</h1>
+          <p className="text-lg text-muted-foreground">
+            Registra observaciones antes, durante y después de cada sesión
+          </p>
+        </div>
+        <Button onClick={() => setQuickMode(!quickMode)} variant="outline" className="gap-2">
+          <Zap className="w-4 h-4" />
+          {quickMode ? "Modo Completo" : "Modo Rápido"}
+        </Button>
       </div>
 
       <Card>
@@ -155,7 +207,7 @@ export default function Evaluation() {
               <CardDescription>Línea base - Semana 0</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Agrupación por nacionalidad</Label>
                 <RadioGroup value={grouping} onValueChange={setGrouping}>
                   <div className="flex items-center space-x-2">
@@ -179,7 +231,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Nivel de aislamiento</Label>
                 <RadioGroup value={isolation} onValueChange={setIsolation}>
                   <div className="flex items-center space-x-2">
@@ -203,7 +255,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Tensiones observables</Label>
                 <RadioGroup value={tensions} onValueChange={setTensions}>
                   <div className="flex items-center space-x-2">
@@ -227,7 +279,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Comunicación entre grupos</Label>
                 <RadioGroup value={communication} onValueChange={setCommunication}>
                   <div className="flex items-center space-x-2">
@@ -265,8 +317,8 @@ export default function Evaluation() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="stereotypesObserved">Estereotipos y prejuicios observables</Label>
+              <div className={`space-y-2 ${quickMode ? 'hidden' : ''}`}>
+                <Label htmlFor="stereotypesObserved">Estereotipos y Prejuicios Observables</Label>
                 <Textarea
                   id="stereotypesObserved"
                   value={stereotypesObserved}
@@ -287,8 +339,8 @@ export default function Evaluation() {
               <CardDescription>Seguimiento por sesión</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <Label>Participación en dinámicas</Label>
+                <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
+                <Label>Interacciones mixtas</Label>bel>
                 <RadioGroup value={participation} onValueChange={setParticipation}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="100" id="p100" />
@@ -309,8 +361,8 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
-                <Label>Respeto mutuo</Label>
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
+                <Label>Respeto Mutuo</Label>
                 <RadioGroup value={respect} onValueChange={setRespect}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="r-high" />
@@ -333,7 +385,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Apertura a otros</Label>
                 <RadioGroup value={openness} onValueChange={setOpenness}>
                   <div className="flex items-center space-x-2">
@@ -357,8 +409,8 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
-                <Label>Risa / Ambiente lúdico</Label>
+               <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
+                <Label>Risa/Ambiente lúdico</Label>>
                 <RadioGroup value={laughter} onValueChange={setLaughter}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="l-high" />
@@ -392,8 +444,8 @@ export default function Evaluation() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="incidents">Incidentes o situaciones especiales</Label>
+              <div className={`space-y-2 ${quickMode ? 'hidden' : ''}`}>
+                <Label htmlFor="incidents">Incidentes o Situaciones Especiales</Label>
                 <Textarea
                   id="incidents"
                   value={incidents}
@@ -414,7 +466,7 @@ export default function Evaluation() {
               <CardDescription>Impacto y resultados - Semana 4</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Agrupación por nacionalidad (después)</Label>
                 <RadioGroup value={groupingAfter} onValueChange={setGroupingAfter}>
                   <div className="flex items-center space-x-2">
@@ -446,7 +498,7 @@ export default function Evaluation() {
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Productos colectivos completados</Label>
                 <RadioGroup value={productsCompleted} onValueChange={setProductsCompleted}>
                   <div className="flex items-center space-x-2">
@@ -470,7 +522,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-4">
+              <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
                 <Label>Cada participante se siente representado</Label>
                 <RadioGroup value={participantRepresentation} onValueChange={setParticipantRepresentation}>
                   <div className="flex items-center space-x-2">
@@ -488,7 +540,7 @@ export default function Evaluation() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-2">
+              <div className={`space-y-2 ${quickMode ? 'hidden' : ''}`}>
                 <Label htmlFor="recommendations">Recomendaciones para futuras implementaciones</Label>
                 <Textarea
                   id="recommendations"
@@ -507,12 +559,9 @@ export default function Evaluation() {
         <Button variant="outline" onClick={resetFields}>
           <FileText className="w-4 h-4 mr-2" />
           Limpiar Formulario
-        </Button>
-        <Button onClick={handleSubmit}>
-          <Save className="w-4 h-4 mr-2" />
+      <div className="flex justify-end">
+        <Button onClick={quickMode ? handleQuickSubmit : handleSubmit} className="gap-2">
+          <Save className="w-4 h-4" />
           Guardar Evaluación
         </Button>
       </div>
-    </div>
-  );
-}

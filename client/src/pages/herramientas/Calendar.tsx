@@ -4,13 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { useEvaluationData } from "@/hooks/useEvaluationData";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-
-export default function Calendar() {
-  const { sessions } = useEvaluationData();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-
-  const sessionsByDate = useMemo(() => {
+	import "react-day-picker/dist/style.css";
+	
+	export default function Calendar() {
+	  const { sessions, getSessionEvaluations } = useEvaluationData(); // NEW: getSessionEvaluations
+	  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+	
+	  const sessionsByDate = useMemo(() => {
     const map: Record<string, typeof sessions> = {};
     sessions.forEach((session) => {
       const dateKey = session.date;
@@ -101,16 +101,30 @@ export default function Calendar() {
                     key={session.id}
                     className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{session.group}</h3>
-                      <Badge>{session.date}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Facilitador:</strong> {session.facilitator}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Creada: {new Date(session.createdAt).toLocaleString("es-ES")}
-                    </p>
+	                    <div className="flex items-center justify-between mb-2">
+	                      <h3 className="font-semibold">{session.group}</h3>
+	                      <div className="flex gap-2 items-center">
+	                        <Badge>{session.date}</Badge>
+	                        {/* NEW: Evaluation Status Badge */}
+	                        {getSessionEvaluations(session.id).length > 0 && (
+	                          <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+	                            {getSessionEvaluations(session.id).length} Evaluacion(es)
+	                          </Badge>
+	                        )}
+	                      </div>
+	                    </div>
+	                    <p className="text-sm text-muted-foreground">
+	                      <strong>Facilitador:</strong> {session.facilitator}
+	                    </p>
+	                    {/* NEW: Session Notes */}
+	                    {session.notes && (
+	                      <p className="text-sm mt-2 p-2 bg-muted rounded-md border">
+	                        <strong>Notas:</strong> {session.notes}
+	                      </p>
+	                    )}
+	                    <p className="text-xs text-muted-foreground mt-1">
+	                      Creada: {new Date(session.createdAt).toLocaleString("es-ES")}
+	                    </p>
                   </div>
                 ))}
               </div>
@@ -142,13 +156,19 @@ export default function Calendar() {
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <Badge variant="outline">{session.date}</Badge>
-                      <div>
-                        <p className="font-medium">{session.group}</p>
-                        <p className="text-sm text-muted-foreground">{session.facilitator}</p>
-                      </div>
-                    </div>
-                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+	                      <Badge variant="outline">{session.date}</Badge>
+	                      <div>
+	                        <p className="font-medium">{session.group}</p>
+	                        <p className="text-sm text-muted-foreground">{session.facilitator}</p>
+	                        {/* NEW: Evaluation Status Badge in All Sessions List */}
+	                        {getSessionEvaluations(session.id).length > 0 && (
+	                          <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 mt-1">
+	                            {getSessionEvaluations(session.id).length} Evaluacion(es)
+	                          </Badge>
+	                        )}
+	                      </div>
+	                    </div>
+	                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                   </div>
                 ))}
             </div>
