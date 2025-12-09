@@ -49,22 +49,17 @@ export default function Evaluation() {
       sessionId: selectedSession,
       phase,
       grouping,
-      isolation,
+      discomfort: isolation,
       tensions,
       communication,
       mixedInteractions: parseInt(mixedInteractions) || 0,
-      stereotypesObserved,
       participation,
       respect,
       openness,
       laughter,
       mixedObserved,
-      incidents,
       groupingAfter,
-      mixedInteractionsAfter: parseInt(mixedInteractionsAfter) || 0,
-      productsCompleted,
-      participantRepresentation,
-      recommendations
+      mixedInteractionsAfter: parseInt(mixedInteractionsAfter) || 0
     };
 
     createEvaluation(evaluationData);

@@ -111,8 +111,7 @@ export function calculateCorrelation(x: number[], y: number[]): number {
     return 0;
   }
 
-  const pairs = x.map((xi, i) => [xi, y[i]]);
-  const correlation = stats.sampleCorrelation(pairs);
+  const correlation = stats.sampleCorrelation(x, y);
   
   return isNaN(correlation) ? 0 : correlation;
 }

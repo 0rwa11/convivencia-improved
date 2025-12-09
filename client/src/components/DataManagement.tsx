@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Upload, FileText, FileJson } from "lucide-react";
 import { useEvaluationData } from "@/hooks/useEvaluationData";
-import { toast } from "sonner";
+import { toast as showToast } from "sonner";
 
 export default function DataManagement() {
   const { exportAsCSV, exportAsJSON, importFromJSON } = useEvaluationData();
@@ -19,11 +19,7 @@ export default function DataManagement() {
     if (!file) return;
 
     if (file.type !== "application/json") {
-      toast({
-        title: "Error de Importación",
-        description: "Por favor, selecciona un archivo JSON válido.",
-        variant: "destructive",
-      });
+      showToast.error("Por favor, selecciona un archivo JSON válido.");
       return;
     }
 
@@ -34,23 +30,12 @@ export default function DataManagement() {
         const jsonString = e.target?.result as string;
         const result = importFromJSON(jsonString);
         if (result.success) {
-          toast({
-            title: "Importación Exitosa",
-            description: result.message,
-          });
+          showToast.success(result.message);
         } else {
-          toast({
-            title: "Error de Importación",
-            description: result.message,
-            variant: "destructive",
-          });
+          showToast.error(result.message);
         }
       } catch (error) {
-        toast({
-          title: "Error de Importación",
-          description: "Error al procesar el archivo.",
-          variant: "destructive",
-        });
+        showToast.error("Error al procesar el archivo.");
       } finally {
         setIsImporting(false);
         // Clear the file input so the same file can be selected again

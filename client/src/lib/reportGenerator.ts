@@ -39,24 +39,24 @@ export async function generatePDF(
 
   // Título
   doc.setFontSize(20);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(data.title, margin, yPosition);
   yPosition += 15;
 
   // Fecha
   doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(`Generado: ${data.date}`, margin, yPosition);
   yPosition += 10;
 
   // Resumen
   doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('Resumen', margin, yPosition);
   yPosition += 8;
 
   doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   const summaryLines = doc.splitTextToSize(data.summary, pageWidth - 2 * margin);
   doc.text(summaryLines, margin, yPosition);
   yPosition += summaryLines.length * lineHeight + 10;
@@ -69,7 +69,7 @@ export async function generatePDF(
     }
 
     doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Métricas Estadísticas', margin, yPosition);
     yPosition += 10;
 
@@ -80,12 +80,12 @@ export async function generatePDF(
       }
 
       doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(metricName, margin, yPosition);
       yPosition += 8;
 
       doc.setFontSize(9);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       const metricLines = [
         `Media: ${metrics.mean.toFixed(2)}`,
         `Mediana: ${metrics.median.toFixed(2)}`,
@@ -110,7 +110,7 @@ export async function generatePDF(
     }
 
     doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(table.name, margin, yPosition);
     yPosition += 10;
 
@@ -126,7 +126,7 @@ export async function generatePDF(
     // Headers
     doc.setFillColor(41, 128, 185);
     doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
 
     table.headers.forEach((header, i) => {
@@ -149,7 +149,7 @@ export async function generatePDF(
 
     // Rows
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
 
     table.rows.forEach((row, rowIndex) => {
