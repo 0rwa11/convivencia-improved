@@ -149,36 +149,60 @@ export function useEvaluationData() {
     [evaluations]
   );
 
-  // Export data as CSV
-  const exportAsCSV = useCallback(() => {
-    const headers = [
-      "Session ID",
-      "Date",
-      "Facilitator",
-      "Group",
-      "Phase",
-      "Grouping",
-      "Discomfort",
-      "Tensions",
-      "Communication",
-      "Mixed Interactions",
-    ];
-
-    const rows = evaluations.map((e) => {
-      const session = sessions.find((s) => s.id === e.sessionId);
-      return [
-        e.sessionId,
-        session?.date || "",
-        session?.facilitator || "",
-        session?.group || "",
-        e.phase,
-        e.grouping,
-        e.discomfort,
-        e.tensions,
-        e.communication,
-        e.mixedInteractions,
-      ];
-    });
+	  // Export data as CSV
+	  const exportAsCSV = useCallback(() => {
+	    const headers = [
+	      "Session ID",
+	      "Session Date",
+	      "Facilitator",
+	      "Group",
+	      "Session Notes", // NEW
+	      "Evaluation ID", // NEW
+	      "Evaluation Created At", // NEW
+	      "Phase",
+	      "Grouping (Before)",
+	      "Discomfort",
+	      "Tensions",
+	      "Communication",
+	      "Mixed Interactions (Before)",
+	      "Participation (During)",
+	      "Respect (During)",
+	      "Openness (During)",
+	      "Laughter (During)",
+	      "Mixed Observed (During)",
+	      "Grouping (After)",
+	      "Mixed Interactions (After)",
+	      "Products Completed (After)",
+	      "Participant Representation (After)",
+	    ];
+	
+	    const rows = evaluations.map((e) => {
+	      const session = sessions.find((s) => s.id === e.sessionId);
+	      return [
+	        e.sessionId,
+	        session?.date || "",
+	        session?.facilitator || "",
+	        session?.group || "",
+	        session?.notes || "", // NEW
+	        e.id, // NEW
+	        e.createdAt, // NEW
+	        e.phase,
+	        e.grouping,
+	        e.discomfort,
+	        e.tensions,
+	        e.communication,
+	        e.mixedInteractions,
+	        e.participation,
+	        e.respect,
+	        e.openness,
+	        e.laughter,
+	        e.mixedObserved,
+	        e.groupingAfter,
+	        e.mixedInteractionsAfter,
+	        e.productsCompleted,
+	        e.participantRepresentation,
+	      ];
+	    });
 
     const csv = [
       headers.join(","),
@@ -290,17 +314,20 @@ export function useEvaluationData() {
 	  const importFromJSON = useCallback(
 	    (jsonString: string) => {
       try {
-        const data = JSON.parse(jsonString);
-        if (data.sessions && Array.isArray(data.sessions) && data.evaluations && Array.isArray(data.evaluations)) {
-          // Simple validation to ensure data structure is correct
-          if (data.sessions.every((s: any) => s.id && s.date) && data.evaluations.every((e: any) => e.id && e.sessionId)) {
-            saveSessions(data.sessions);
-            saveEvaluations(data.evaluations);
-            return { success: true, message: "Datos importados correctamente." };
-          } else {
-            return { success: false, message: "Estructura de datos JSON inválida." };
-          }
-        } else {
+	        const data = JSON.parse(jsonString);
+	        if (data.sessions && Array.isArray(data.sessions) && data.evaluations && Array.isArray(data.evaluations)) {
+	          // Stronger validation to ensure all required fields are present
+	          const isSessionsValid = data.sessions.every((s: any) => s.id && s.date && s.facilitator && s.group && typeof s.notes === 'string');
+	          const isEvaluationsValid = data.evaluations.every((e: any) => e.id && e.sessionId && e.phase);
+	
+	          if (isSessionsValid && isEvaluationsValid) {
+	            saveSessions(data.sessions);
+	            saveEvaluations(data.evaluations);
+	            return { success: true, message: "Datos importados correctamente." };
+	          } else {
+	            return { success: false, message: "Estructura de datos JSON inválida. Faltan campos esenciales en sesiones o evaluaciones." };
+	          }
+	        } else {
           return { success: false, message: "El archivo JSON debe contener 'sessions' y 'evaluations'." };
         }
       } catch (error) {
