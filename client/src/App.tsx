@@ -41,9 +41,10 @@ import AnalyticsPage from "./pages/herramientas/AnalyticsPage";
 import SessionReports from "./pages/herramientas/SessionReports";
 import ResourceLibrary from "./pages/herramientas/ResourceLibrary";
 import FacilitatorChecklist from "./pages/herramientas/FacilitatorChecklist";
-import ImpactDashboard from "./pages/herramientas/ImpactDashboard";
-
-// Custom NavLink component
+	import ImpactDashboard from "./pages/herramientas/ImpactDashboard";
+	import FacilitatorAnalysis from "./pages/herramientas/FacilitatorAnalysis"; // NEW: Facilitator Analysis Page
+	
+	// Custom NavLink component
 const NavLink = ({ href, className, onClick, children }: any) => {
   const [, setLocation] = useLocation();
   
@@ -161,11 +162,14 @@ function Header() {
               <DropdownMenuItem asChild>
                 <NavLink href="/herramientas/checklist" className="cursor-pointer">Checklist del Facilitador</NavLink>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <NavLink href="/herramientas/impacto" className="cursor-pointer">Dashboard de Impacto</NavLink>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+	              <DropdownMenuItem asChild>
+	                <NavLink href="/herramientas/impacto" className="cursor-pointer">Dashboard de Impacto</NavLink>
+	              </DropdownMenuItem>
+	              <DropdownMenuItem asChild>
+	                <NavLink href="/herramientas/facilitador" className="cursor-pointer">Análisis por Facilitador</NavLink>
+	              </DropdownMenuItem>
+	            </DropdownMenuContent>
+	          </DropdownMenu>
         </div>
 
         {/* Right Side Actions */}
@@ -230,11 +234,10 @@ function Header() {
             <NavLink href="/trabajo/grupos" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Grupos</NavLink>
 
             <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">Herramientas</div>
-            <NavLink href="/herramientas/calendario" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Calendario</NavLink>
-            <NavLink href="/herramientas/busqueda" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Búsqueda Avanzada</NavLink>
-            <NavLink href="/herramientas/resumen" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Resumen Ejecutivo</NavLink>
-            <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>
-            <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
+            <NavLink href="/herramientas/calendario" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Calendario	            <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
+	            <NavLink href="/herramientas/impacto" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Impacto</NavLink>
+	            <NavLink href="/herramientas/facilitador" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis por Facilitador</NavLink>
+	            <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>         <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
             <NavLink href="/herramientas/biblioteca" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Biblioteca de Recursos</NavLink>
             <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
             <NavLink href="/herramientas/impacto" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Impacto</NavLink>
@@ -272,10 +275,11 @@ function Router() {
       <Route path={"herramientas/analisis"} component={AnalyticsPage} />
       <Route path={"herramientas/reportes"} component={SessionReports} />
       <Route path={"herramientas/biblioteca"} component={ResourceLibrary} />
-      <Route path={"herramientas/checklist"} component={FacilitatorChecklist} />
-      <Route path={"herramientas/impacto"} component={ImpactDashboard} />
-      
-      <Route path={"/404"} component={NotFound} />
+	      <Route path={"herramientas/checklist"} component={FacilitatorChecklist} />
+	      <Route path={"herramientas/impacto"} component={ImpactDashboard} />
+	      <Route path={"/herramientas/facilitador"} component={FacilitatorAnalysis} />
+	      
+	      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

@@ -38,13 +38,15 @@ import {
 } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Download, Trash2, ChevronDown, ChevronUp, Edit, X } from "lucide-react";
-import { toast } from "sonner";
-import type { EvaluationData } from "@/hooks/useEvaluationData";
-
-export default function EvaluationRegistry() {
-  const { sessions, createSession, deleteSession, getSessionEvaluations, exportAsCSV, updateEvaluation, deleteEvaluation } =
-    useEvaluationData();
+	import { Plus, Download, Trash2, ChevronDown, ChevronUp, Edit, X, Copy, AlertTriangle } from "lucide-react";
+	import { toast } from "sonner";
+	import type { EvaluationData, DataQualityIssue } from "@/hooks/useEvaluationData";
+	
+	export default function EvaluationRegistry() {
+	  const { sessions, createSession, deleteSession, getSessionEvaluations, exportAsCSV, updateEvaluation, deleteEvaluation, checkDataQuality } =
+	    useEvaluationData();
+	
+	  const dataQualityIssues = useMemo(() => checkDataQuality(), [sessions, deleteEvaluation]); // Recalculate on session/evaluation change
   const [openDialog, setOpenDialog] = useState(false);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
@@ -76,10 +78,25 @@ export default function EvaluationRegistry() {
       facilitator: "",
       group: "",
     });
-    setOpenDialog(false);
-  };
-
-  const handleDeleteSession = (sessionId: string) => {
+	    setOpenDialog(false);
+	  };
+	
+	  const handleCloneSession = (session: SessionData) => {
+	    // Create a new session with the same group, facilitator, and notes, but a new date (tomorrow)
+	    const tomorrow = new Date();
+	    tomorrow.setDate(tomorrow.getDate() + 1);
+	    
+	    createSession({
+	      date: tomorrow.toISOString().split("T")[0],
+	      facilitator: session.facilitator,
+	      group: session.group,
+	      notes: session.notes,
+	    });
+	    
+	    toast.success(`Sesión clonada exitosamente para ${tomorrow.toLocaleDateString()}`);
+	  };
+	
+	  const handleDeleteSession = (sessionId: string) => {
     deleteSession(sessionId);
     toast.success("Sesión eliminada exitosamente");
     setDeleteSessionId(null);
@@ -139,14 +156,38 @@ export default function EvaluationRegistry() {
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Registro de Evaluaciones</h1>
-        <p className="text-lg text-muted-foreground">
-          Gestiona las sesiones y registra las evaluaciones del programa
-        </p>
-      </div>
+	  return (
+	    <div className="space-y-8">
+	      <div>
+	        <h1 className="text-4xl font-bold mb-2">Registro de Evaluaciones</h1>
+	        <p className="text-lg text-muted-foreground">
+	          Gestiona las sesiones y registra las evaluaciones del programa
+	        </p>
+	      </div>
+	
+	      {/* NEW: Data Quality Alerts */}
+	      {dataQualityIssues.length > 0 && (
+	        <Card className="bg-red-50 border-red-200">
+	          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+	            <CardTitle className="text-red-900 text-lg flex items-center gap-2">
+	              <AlertTriangle className="w-5 h-5" />
+	              Alertas de Calidad de Datos ({dataQualityIssues.length})
+	            </CardTitle>
+	          </CardHeader>
+	          <CardContent className="text-red-800 space-y-2">
+	            {dataQualityIssues.slice(0, 5).map((issue: DataQualityIssue, index: number) => (
+	              <p key={index} className="text-sm">
+	                <span className="font-semibold">[{issue.sessionGroup} - {issue.sessionDate}]:</span> {issue.message}
+	              </p>
+	            ))}
+	            {dataQualityIssues.length > 5 && (
+	              <p className="text-sm font-medium">
+	                ... y {dataQualityIssues.length - 5} alertas más. Revisa el registro para más detalles.
+	              </p>
+	            )}
+	          </CardContent>
+	        </Card>
+	      )}
 
       {/* Instructions Card */}
       <Card className="bg-blue-50 border-blue-200">
@@ -294,14 +335,26 @@ export default function EvaluationRegistry() {
                         </p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                      {evaluations.length} evaluaciones
-                    </span>
-                    <AlertDialog open={deleteSessionId === session.id} onOpenChange={(open) => {
-                      if (!open) setDeleteSessionId(null);
-                    }}>
+	                  </div>
+	                  <div className="flex items-center gap-2">
+	                    <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+	                      {evaluations.length} evaluaciones
+	                    </span>
+	                    {/* NEW: Clone Button */}
+	                    <Button
+	                      variant="ghost"
+	                      size="icon"
+	                      onClick={(e) => {
+	                        e.stopPropagation(); // Prevent expanding/collapsing the card
+	                        handleCloneSession(session);
+	                      }}
+	                      title="Clonar Sesión"
+	                    >
+	                      <Copy className="w-4 h-4" />
+	                    </Button>
+	                    <AlertDialog open={deleteSessionId === session.id} onOpenChange={(open) => {
+	                      if (!open) setDeleteSessionId(null);
+	                    }}>
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Eliminar Sesión</AlertDialogTitle>

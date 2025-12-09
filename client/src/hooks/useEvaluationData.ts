@@ -9,10 +9,20 @@ export interface Session {
   createdAt: string;
 }
 
-export interface EvaluationData {
-  id: string;
-  sessionId: string;
-  phase: "before" | "during" | "after";
+	export interface EvaluationData {
+	  id: string;
+	  sessionId: string;
+	  phase: "before" | "during" | "after";
+	  // Add fields for other evaluation data here...
+	}
+	
+	export interface DataQualityIssue {
+	  sessionId: string;
+	  sessionDate: string;
+	  sessionGroup: string;
+	  issue: 'missing_baseline' | 'missing_impact' | 'out_of_order' | 'stale_session';
+	  message: string;
+	}
   grouping: string;
   discomfort: string;
   tensions: string;
@@ -202,8 +212,83 @@ export function useEvaluationData() {
   }, [sessions, evaluations]);
 
   // Import data from JSON
-  const importFromJSON = useCallback(
-    (jsonString: string) => {
+	  const checkDataQuality = useCallback((): DataQualityIssue[] => {
+	    const issues: DataQualityIssue[] = [];
+	    const now = new Date();
+	
+	    sessions.forEach(session => {
+	      const sessionEvals = evaluations.filter(e => e.sessionId === session.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+	      const sessionDate = new Date(session.date);
+	      const sessionDateStr = session.date;
+	
+	      // 1. Missing Baseline (Before)
+	      const hasBefore = sessionEvals.some(e => e.phase === 'before');
+	      if (!hasBefore) {
+	        issues.push({
+	          sessionId: session.id,
+	          sessionDate: sessionDateStr,
+	          sessionGroup: session.group,
+	          issue: 'missing_baseline',
+	          message: `Falta la evaluación de LÍNEA BASE (ANTES) para la sesión.`,
+	        });
+	      }
+	
+	      // 2. Missing Impact (After) - Check if session date is in the past
+	      const hasAfter = sessionEvals.some(e => e.phase === 'after');
+	      // Assuming a program duration of 4 weeks (28 days) after the session date for a final evaluation to be expected
+	      const expectedImpactDate = new Date(sessionDate);
+	      expectedImpactDate.setDate(expectedImpactDate.getDate() + 28);
+	
+	      if (!hasAfter && now > expectedImpactDate) {
+	        issues.push({
+	          sessionId: session.id,
+	          sessionDate: sessionDateStr,
+	          sessionGroup: session.group,
+	          issue: 'missing_impact',
+	          message: `Falta la evaluación de IMPACTO (DESPUÉS). Se esperaba después del ${expectedImpactDate.toLocaleDateString()}.`,
+	        });
+	      }
+	
+	      // 3. Stale Session (No evaluation in the last 7 days for an ongoing session)
+	      const lastEval = sessionEvals[sessionEvals.length - 1];
+	      const daysSinceLastEval = lastEval ? (now.getTime() - new Date(lastEval.createdAt).getTime()) / (1000 * 60 * 60 * 24) : Infinity;
+	      
+	      // Only check for stale if the session is not yet complete (i.e., no 'after' evaluation)
+	      if (!hasAfter && daysSinceLastEval > 7) {
+	        issues.push({
+	          sessionId: session.id,
+	          sessionDate: sessionDateStr,
+	          sessionGroup: session.group,
+	          issue: 'stale_session',
+	          message: `La sesión está INACTIVA. No se ha registrado una evaluación en los últimos 7 días.`,
+	        });
+	      }
+	
+	      // 4. Out of Order (Before evaluation created after During/After) - Simple check
+	      const beforeEval = sessionEvals.find(e => e.phase === 'before');
+	      const nonBeforeEvals = sessionEvals.filter(e => e.phase !== 'before');
+	
+	      if (beforeEval && nonBeforeEvals.length > 0) {
+	        const firstNonBeforeTime = new Date(nonBeforeEvals[0].createdAt).getTime();
+	        const beforeTime = new Date(beforeEval.createdAt).getTime();
+	        
+	        if (beforeTime > firstNonBeforeTime) {
+	          issues.push({
+	            sessionId: session.id,
+	            sessionDate: sessionDateStr,
+	            sessionGroup: session.group,
+	            issue: 'out_of_order',
+	            message: `Evaluación de LÍNEA BASE registrada DESPUÉS de una evaluación de seguimiento.`,
+	          });
+	        }
+	      }
+	    });
+	
+	    return issues;
+	  }, [sessions, evaluations]);
+	
+	  const importFromJSON = useCallback(
+	    (jsonString: string) => {
       try {
         const data = JSON.parse(jsonString);
         if (data.sessions && Array.isArray(data.sessions) && data.evaluations && Array.isArray(data.evaluations)) {
@@ -226,19 +311,20 @@ export function useEvaluationData() {
     [saveSessions, saveEvaluations]
   );
 
-  return {
-    sessions,
-    evaluations,
-    loading,
-    createSession,
-    deleteSession,
-    updateSession,
-    createEvaluation,
-    updateEvaluation,
-    deleteEvaluation,
-    getSessionEvaluations,
-    exportAsCSV,
-    exportAsJSON,
-    importFromJSON,
-  };
-}
+	  return {
+	    sessions,
+	    evaluations,
+	    loading,
+	    createSession,
+	    deleteSession,
+	    updateSession,
+	    createEvaluation,
+	    updateEvaluation,
+	    deleteEvaluation,
+	    getSessionEvaluations,
+	    exportAsCSV,
+	    exportAsJSON,
+	    importFromJSON,
+	    checkDataQuality, // NEW: Export data quality check function
+	  };
+	}
