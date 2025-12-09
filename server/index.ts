@@ -46,6 +46,9 @@ async function startServer() {
   });
 
   app.post("/api/data/evaluations", (req, res) => {
+    if (!req.body || typeof req.body !== "object") {
+      return res.status(400).json({ success: false, error: "Invalid evaluation data" });
+    }
     const data = readData();
     const newEvaluation = { ...req.body, id: Date.now().toString() };
     data.evaluations.push(newEvaluation);
@@ -62,10 +65,15 @@ async function startServer() {
   });
 
   app.put("/api/data/evaluations/:id", (req, res) => {
+    if (!req.body || typeof req.body !== "object") {
+      return res.status(400).json({ success: false, error: "Invalid evaluation data" });
+    }
     const data = readData();
     const index = data.evaluations.findIndex((e: any) => e.id === req.params.id);
     if (index !== -1) {
-      data.evaluations[index] = { ...data.evaluations[index], ...req.body };
+      // Ensure ID is not overwritten and handle partial updates
+      const { id, ...updateData } = req.body;
+      data.evaluations[index] = { ...data.evaluations[index], ...updateData };
       if (writeData(data)) {
         res.json({ success: true, data: data.evaluations[index] });
       } else {
