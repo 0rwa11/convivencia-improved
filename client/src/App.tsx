@@ -38,6 +38,7 @@ import Calendar from "./pages/herramientas/Calendar";
 import AdvancedSearch from "./pages/herramientas/AdvancedSearch";
 import ExecutiveSummary from "./pages/herramientas/ExecutiveSummary";
 import AnalyticsPage from "./pages/herramientas/AnalyticsPage";
+import SessionReports from "./pages/herramientas/SessionReports";
 
 // Custom NavLink component
 const NavLink = ({ href, className, onClick, children }: any) => {
@@ -148,6 +149,9 @@ function Header() {
               <DropdownMenuItem asChild>
                 <NavLink href="/herramientas/analisis" className="cursor-pointer">Análisis Avanzados</NavLink>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink href="/herramientas/reportes" className="cursor-pointer">Reportes de Sesión</NavLink>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -218,6 +222,7 @@ function Header() {
             <NavLink href="/herramientas/busqueda" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Búsqueda Avanzada</NavLink>
             <NavLink href="/herramientas/resumen" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Resumen Ejecutivo</NavLink>
             <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>
+            <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
           </div>
         </div>
       )}
@@ -249,7 +254,8 @@ function Router() {
       <Route path={"/herramientas/calendario"} component={Calendar} />
       <Route path={"/herramientas/busqueda"} component={AdvancedSearch} />
       <Route path={"/herramientas/resumen"} component={ExecutiveSummary} />
-      <Route path={"/herramientas/analisis"} component={AnalyticsPage} />
+      <Route path={"herramientas/analisis"} component={AnalyticsPage} />
+      <Route path={"herramientas/reportes"} component={SessionReports} />
       
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
