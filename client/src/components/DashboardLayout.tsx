@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X, FileText, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -14,6 +14,25 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+// Custom NavLink component to avoid nested <a> tags
+const NavLink = ({ href, className, onClick, children }: any) => {
+  const [, setLocation] = useLocation();
+  
+  return (
+    <a
+      href={href}
+      className={className}
+      onClick={(e) => {
+        e.preventDefault();
+        setLocation(href);
+        onClick?.();
+      }}
+    >
+      {children}
+    </a>
+  );
+};
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -24,12 +43,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors">
+          <NavLink href="/" className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
               C
             </div>
             <span className="hidden sm:inline">Convivencia</span>
-          </Link>
+          </NavLink>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
@@ -42,22 +61,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/inicio" className="cursor-pointer">Inicio</Link>
+                  <NavLink href="/programa/inicio" className="cursor-pointer">Inicio</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/sobre" className="cursor-pointer">Sobre el Programa</Link>
+                  <NavLink href="/programa/sobre" className="cursor-pointer">Sobre el Programa</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/sesiones" className="cursor-pointer">Las 3 Sesiones</Link>
+                  <NavLink href="/programa/sesiones" className="cursor-pointer">Las 3 Sesiones</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/dinamicas" className="cursor-pointer">Dinámicas</Link>
+                  <NavLink href="/programa/dinamicas" className="cursor-pointer">Dinámicas</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/materiales" className="cursor-pointer">Materiales</Link>
+                  <NavLink href="/programa/materiales" className="cursor-pointer">Materiales</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/guia" className="cursor-pointer">Guía del Facilitador</Link>
+                  <NavLink href="/programa/guia" className="cursor-pointer">Guía del Facilitador</NavLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -71,16 +90,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/evaluacion" className="cursor-pointer">Evaluación</Link>
+                  <NavLink href="/trabajo/evaluacion" className="cursor-pointer">Evaluación</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/registro" className="cursor-pointer">Registro de Evaluaciones</Link>
+                  <NavLink href="/trabajo/registro" className="cursor-pointer">Registro de Evaluaciones</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/analisis" className="cursor-pointer">Análisis Comparativo</Link>
+                  <NavLink href="/trabajo/analisis" className="cursor-pointer">Análisis Comparativo</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/grupos" className="cursor-pointer">Dashboard de Grupos</Link>
+                  <NavLink href="/trabajo/grupos" className="cursor-pointer">Dashboard de Grupos</NavLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -94,16 +113,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/calendario" className="cursor-pointer">Calendario</Link>
+                  <NavLink href="/herramientas/calendario" className="cursor-pointer">Calendario</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/busqueda" className="cursor-pointer">Búsqueda Avanzada</Link>
+                  <NavLink href="/herramientas/busqueda" className="cursor-pointer">Búsqueda Avanzada</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/resumen" className="cursor-pointer">Resumen Ejecutivo</Link>
+                  <NavLink href="/herramientas/resumen" className="cursor-pointer">Resumen Ejecutivo</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/analisis" className="cursor-pointer">Análisis Avanzados</Link>
+                  <NavLink href="/herramientas/analisis" className="cursor-pointer">Análisis Avanzados</NavLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -158,112 +177,112 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="font-semibold text-sm text-muted-foreground mb-3">
                 Programa
               </div>
-              <Link
+              <NavLink
                 href="/programa/inicio"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Inicio
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/programa/sobre"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Sobre el Programa
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/programa/sesiones"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Las 3 Sesiones
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/programa/dinamicas"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dinámicas
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/programa/materiales"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Materiales
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/programa/guia"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Guía del Facilitador
-              </Link>
+              </NavLink>
 
               <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">
                 Trabajo
               </div>
-              <Link
+              <NavLink
                 href="/trabajo/evaluacion"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Evaluación
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/trabajo/registro"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Registro de Evaluaciones
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/trabajo/analisis"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Análisis Comparativo
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/trabajo/grupos"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard de Grupos
-              </Link>
+              </NavLink>
 
               <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">
                 Herramientas
               </div>
-              <Link
+              <NavLink
                 href="/herramientas/calendario"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Calendario
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/herramientas/busqueda"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Búsqueda Avanzada
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/herramientas/resumen"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Resumen Ejecutivo
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/herramientas/analisis"
                 className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Análisis Avanzados
-              </Link>
+              </NavLink>
             </div>
           </div>
         )}
