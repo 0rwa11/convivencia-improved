@@ -39,6 +39,7 @@ import AdvancedSearch from "./pages/herramientas/AdvancedSearch";
 import ExecutiveSummary from "./pages/herramientas/ExecutiveSummary";
 import AnalyticsPage from "./pages/herramientas/AnalyticsPage";
 import SessionReports from "./pages/herramientas/SessionReports";
+import ResourceLibrary from "./pages/herramientas/ResourceLibrary";
 
 // Custom NavLink component
 const NavLink = ({ href, className, onClick, children }: any) => {
@@ -152,6 +153,9 @@ function Header() {
               <DropdownMenuItem asChild>
                 <NavLink href="/herramientas/reportes" className="cursor-pointer">Reportes de Sesión</NavLink>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink href="/herramientas/biblioteca" className="cursor-pointer">Biblioteca de Recursos</NavLink>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -223,6 +227,7 @@ function Header() {
             <NavLink href="/herramientas/resumen" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Resumen Ejecutivo</NavLink>
             <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>
             <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
+            <NavLink href="/herramientas/biblioteca" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Biblioteca de Recursos</NavLink>
           </div>
         </div>
       )}
@@ -256,6 +261,7 @@ function Router() {
       <Route path={"/herramientas/resumen"} component={ExecutiveSummary} />
       <Route path={"herramientas/analisis"} component={AnalyticsPage} />
       <Route path={"herramientas/reportes"} component={SessionReports} />
+      <Route path={"herramientas/biblioteca"} component={ResourceLibrary} />
       
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
