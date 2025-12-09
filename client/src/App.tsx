@@ -5,9 +5,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useTheme } from "./contexts/ThemeContext";
 import { Route, Switch, useLocation } from "wouter";
-import { Menu, X, Moon, Sun, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
+import { M	import { Moon, Sun, FileText, Download } from "lucide-react"; // Added Download icon
+	import { Button } from "./components/ui/button";port {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -63,21 +62,54 @@ const NavLink = ({ href, className, onClick, children }: any) => {
   );
 };
 
-function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-md shadow-md border-b border-border" : "bg-background/80 backdrop-blur-sm border-b border-border/50"}`}>
+	function Header() {
+	  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	  const [scrolled, setScrolled] = useState(false);
+	  const { theme, toggleTheme } = useTheme();
+	  const [deferredPrompt, setDeferredPrompt] = useState<any>(null); // PWA Install Prompt
+	
+	  useEffect(() => {
+	    const handleScroll = () => {
+	      setScrolled(window.scrollY > 50);
+	    };
+	    window.addEventListener("scroll", handleScroll);
+	
+	    // PWA Install Prompt Logic
+	    const beforeInstallPromptHandler = (e: any) => {
+	      e.preventDefault();
+	      setDeferredPrompt(e);
+	    };
+	
+	    const appInstalledHandler = () => {
+	      setDeferredPrompt(null);
+	    };
+	
+	    window.addEventListener('beforeinstallprompt', beforeInstallPromptHandler);
+	    window.addEventListener('appinstalled', appInstalledHandler);
+	
+	    return () => {
+	      window.removeEventListener("scroll", handleScroll);
+	      window.removeEventListener('beforeinstallprompt', beforeInstallPromptHandler);
+	      window.removeEventListener('appinstalled', appInstalledHandler);
+	    };
+	  }, []);
+	
+	  const handleInstallClick = () => {
+	    if (deferredPrompt) {
+	      deferredPrompt.prompt();
+	      deferredPrompt.userChoice.then((choiceResult: any) => {
+	        if (choiceResult.outcome === 'accepted') {
+	          console.log('User accepted the install prompt');
+	        } else {
+	          console.log('User dismissed the install prompt');
+	        }
+	        setDeferredPrompt(null);
+	      });
+	    }
+	  };
+	
+	  return (
+	    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-md shadow-md border-b border-border" : "bg-background/80 backdrop-blur-sm border-b border-border/50"}`}>
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
         <NavLink href="/" className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors">
@@ -175,17 +207,30 @@ function Header() {
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
           {/* Export PDF Button */}
-          <Button
-            variant="outline"
-            size="icon"
-            title="Exportar a PDF"
-            onClick={() => window.print()}
-            className="hidden sm:flex"
-          >
-            <FileText className="w-4 h-4" />
-          </Button>
-
-          {/* Theme Toggle */}
+	          {deferredPrompt && (
+	            <Button
+	              variant="default"
+	              size="sm"
+	              title="Instalar Aplicación"
+	              onClick={handleInstallClick}
+	              className="hidden sm:flex gap-2"
+	            >
+	              <Download className="w-4 h-4" />
+	              Instalar Aplicación
+	            </Button>
+	          )}
+	
+	          <Button
+	            variant="outline"
+	            size="icon"
+	            title="Exportar a PDF"
+	            onClick={() => window.print()}
+	            className="hidden sm:flex"
+	          >
+	            <FileText className="w-4 h-4" />
+	          </Button>
+	
+	          {/* Theme Toggle */}
           <Button
             variant="outline"
             size="icon"
