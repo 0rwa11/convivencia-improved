@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X, FileText, Moon, Sun } from "lucide-react";
@@ -24,13 +24,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/">
-            <a className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
-                C
-              </div>
-              <span className="hidden sm:inline">Convivencia</span>
-            </a>
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
+              C
+            </div>
+            <span className="hidden sm:inline">Convivencia</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -44,34 +42,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/inicio">
-                    <a className="cursor-pointer">Inicio</a>
-                  </Link>
+                  <Link href="/programa/inicio" className="cursor-pointer">Inicio</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/sobre">
-                    <a className="cursor-pointer">Sobre el Programa</a>
-                  </Link>
+                  <Link href="/programa/sobre" className="cursor-pointer">Sobre el Programa</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/sesiones">
-                    <a className="cursor-pointer">Las 3 Sesiones</a>
-                  </Link>
+                  <Link href="/programa/sesiones" className="cursor-pointer">Las 3 Sesiones</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/dinamicas">
-                    <a className="cursor-pointer">Dinámicas</a>
-                  </Link>
+                  <Link href="/programa/dinamicas" className="cursor-pointer">Dinámicas</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/materiales">
-                    <a className="cursor-pointer">Materiales</a>
-                  </Link>
+                  <Link href="/programa/materiales" className="cursor-pointer">Materiales</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/programa/guia">
-                    <a className="cursor-pointer">Guía del Facilitador</a>
-                  </Link>
+                  <Link href="/programa/guia" className="cursor-pointer">Guía del Facilitador</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -85,24 +71,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/evaluacion">
-                    <a className="cursor-pointer">Evaluación</a>
-                  </Link>
+                  <Link href="/trabajo/evaluacion" className="cursor-pointer">Evaluación</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/registro">
-                    <a className="cursor-pointer">Registro de Evaluaciones</a>
-                  </Link>
+                  <Link href="/trabajo/registro" className="cursor-pointer">Registro de Evaluaciones</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/analisis">
-                    <a className="cursor-pointer">Análisis Comparativo</a>
-                  </Link>
+                  <Link href="/trabajo/analisis" className="cursor-pointer">Análisis Comparativo</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/trabajo/grupos">
-                    <a className="cursor-pointer">Dashboard de Grupos</a>
-                  </Link>
+                  <Link href="/trabajo/grupos" className="cursor-pointer">Dashboard de Grupos</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -116,24 +94,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/calendario">
-                    <a className="cursor-pointer">Calendario</a>
-                  </Link>
+                  <Link href="/herramientas/calendario" className="cursor-pointer">Calendario</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/busqueda">
-                    <a className="cursor-pointer">Búsqueda Avanzada</a>
-                  </Link>
+                  <Link href="/herramientas/busqueda" className="cursor-pointer">Búsqueda Avanzada</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/resumen">
-                    <a className="cursor-pointer">Resumen Ejecutivo</a>
-                  </Link>
+                  <Link href="/herramientas/resumen" className="cursor-pointer">Resumen Ejecutivo</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/herramientas/analisis">
-                    <a className="cursor-pointer">Análisis Avanzados</a>
-                  </Link>
+                  <Link href="/herramientas/analisis" className="cursor-pointer">Análisis Avanzados</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -188,125 +158,111 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="font-semibold text-sm text-muted-foreground mb-3">
                 Programa
               </div>
-              <Link href="/programa/inicio">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Inicio
-                </a>
+              <Link
+                href="/programa/inicio"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Inicio
               </Link>
-              <Link href="/programa/sobre">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sobre el Programa
-                </a>
+              <Link
+                href="/programa/sobre"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sobre el Programa
               </Link>
-              <Link href="/programa/sesiones">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Las 3 Sesiones
-                </a>
+              <Link
+                href="/programa/sesiones"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Las 3 Sesiones
               </Link>
-              <Link href="/programa/dinamicas">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Dinámicas
-                </a>
+              <Link
+                href="/programa/dinamicas"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dinámicas
               </Link>
-              <Link href="/programa/materiales">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Materiales
-                </a>
+              <Link
+                href="/programa/materiales"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Materiales
               </Link>
-              <Link href="/programa/guia">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Guía del Facilitador
-                </a>
+              <Link
+                href="/programa/guia"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Guía del Facilitador
               </Link>
 
               <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">
                 Trabajo
               </div>
-              <Link href="/trabajo/evaluacion">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Evaluación
-                </a>
+              <Link
+                href="/trabajo/evaluacion"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Evaluación
               </Link>
-              <Link href="/trabajo/registro">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Registro de Evaluaciones
-                </a>
+              <Link
+                href="/trabajo/registro"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Registro de Evaluaciones
               </Link>
-              <Link href="/trabajo/analisis">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Análisis Comparativo
-                </a>
+              <Link
+                href="/trabajo/analisis"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Análisis Comparativo
               </Link>
-              <Link href="/trabajo/grupos">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Dashboard de Grupos
-                </a>
+              <Link
+                href="/trabajo/grupos"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard de Grupos
               </Link>
 
               <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">
                 Herramientas
               </div>
-              <Link href="/herramientas/calendario">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Calendario
-                </a>
+              <Link
+                href="/herramientas/calendario"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Calendario
               </Link>
-              <Link href="/herramientas/busqueda">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Búsqueda Avanzada
-                </a>
+              <Link
+                href="/herramientas/busqueda"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Búsqueda Avanzada
               </Link>
-              <Link href="/herramientas/resumen">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Resumen Ejecutivo
-                </a>
+              <Link
+                href="/herramientas/resumen"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Resumen Ejecutivo
               </Link>
-              <Link href="/herramientas/analisis">
-                <a
-                  className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Análisis Avanzados
-                </a>
+              <Link
+                href="/herramientas/analisis"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Análisis Avanzados
               </Link>
             </div>
           </div>
