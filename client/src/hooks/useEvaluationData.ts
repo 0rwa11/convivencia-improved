@@ -13,7 +13,21 @@ export interface Session {
 	  id: string;
 	  sessionId: string;
 	  phase: "before" | "during" | "after";
-	  // Add fields for other evaluation data here...
+	  grouping: string;
+	  discomfort: string;
+	  tensions: string;
+	  communication: string;
+	  mixedInteractions: number;
+	  participation: string;
+	  respect: string;
+	  openness: string;
+	  laughter: string;
+	  mixedObserved: string;
+	  groupingAfter: string;
+	  mixedInteractionsAfter: number;
+	  productsCompleted: number;
+	  participantRepresentation: number;
+	  createdAt: string;
 	}
 	
 	export interface DataQualityIssue {
@@ -23,22 +37,9 @@ export interface Session {
 	  issue: 'missing_baseline' | 'missing_impact' | 'out_of_order' | 'stale_session';
 	  message: string;
 	}
-  grouping: string;
-  discomfort: string;
-  tensions: string;
-  communication: string;
-  mixedInteractions: number;
-  participation: string;
-  respect: string;
-  openness: string;
-  laughter: string;
-  mixedObserved: string;
-  groupingAfter: string;
-  mixedInteractionsAfter: number;
-  createdAt: string;
-}
 
-const SESSIONS_KEY = "convivencia_sessions";
+	
+	const SESSIONS_KEY = "convivencia_sessions";
 const EVALUATIONS_KEY = "convivencia_evaluations";
 
 export function useEvaluationData() {

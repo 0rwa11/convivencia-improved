@@ -340,7 +340,7 @@ export default function Evaluation() {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
-                <Label>Interacciones mixtas</Label>bel>
+                <Label>Interacciones mixtas</Label>
                 <RadioGroup value={participation} onValueChange={setParticipation}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="100" id="p100" />
@@ -410,7 +410,7 @@ export default function Evaluation() {
               </div>
 
                <div className={`space-y-4 ${quickMode ? 'hidden' : ''}`}>
-                <Label>Risa/Ambiente lúdico</Label>>
+                <Label>Risa/Ambiente lúdico</Label>
                 <RadioGroup value={laughter} onValueChange={setLaughter}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="l-high" />
@@ -555,13 +555,16 @@ export default function Evaluation() {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={resetFields}>
-          <FileText className="w-4 h-4 mr-2" />
-          Limpiar Formulario
-      <div className="flex justify-end">
-        <Button onClick={quickMode ? handleQuickSubmit : handleSubmit} className="gap-2">
-          <Save className="w-4 h-4" />
-          Guardar Evaluación
-        </Button>
-      </div>
+	      <div className="flex justify-end gap-4">
+	        <Button variant="outline" onClick={resetFields}>
+	          <FileText className="w-4 h-4 mr-2" />
+	          Limpiar Formulario
+	        </Button>
+	        <Button onClick={quickMode ? handleQuickSubmit : handleSubmit} className="gap-2">
+	          <Save className="w-4 h-4" />
+	          Guardar Evaluación
+	        </Button>
+	      </div>
+	    </div>
+	  );
+	}

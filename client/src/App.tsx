@@ -234,14 +234,16 @@ function Header() {
             <NavLink href="/trabajo/grupos" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Grupos</NavLink>
 
             <div className="font-semibold text-sm text-muted-foreground mb-3 mt-4">Herramientas</div>
-            <NavLink href="/herramientas/calendario" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Calendario	            <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
+	            <NavLink href="/herramientas/calendario" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Calendario</NavLink>
+	            <NavLink href="/herramientas/busqueda" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Búsqueda Avanzada</NavLink>
+	            <NavLink href="/herramientas/resumen" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Resumen Ejecutivo</NavLink>
+	            <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>
+	            <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
+	            <NavLink href="/herramientas/biblioteca" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Biblioteca de Recursos</NavLink>
+	            <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
 	            <NavLink href="/herramientas/impacto" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Impacto</NavLink>
 	            <NavLink href="/herramientas/facilitador" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis por Facilitador</NavLink>
-	            <NavLink href="/herramientas/analisis" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Análisis Avanzados</NavLink>         <NavLink href="/herramientas/reportes" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Reportes de Sesión</NavLink>
-            <NavLink href="/herramientas/biblioteca" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Biblioteca de Recursos</NavLink>
-            <NavLink href="/herramientas/checklist" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Checklist del Facilitador</NavLink>
-            <NavLink href="/herramientas/impacto" className="block px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard de Impacto</NavLink>
-          </div>
+	          </div>
         </div>
       )}
     </nav>

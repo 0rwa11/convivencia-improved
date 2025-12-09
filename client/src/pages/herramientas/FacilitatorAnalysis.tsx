@@ -6,22 +6,22 @@ import { BarChart, Users, Zap } from "lucide-react";
 
 // Helper function to map qualitative scores to numeric values for averaging
 const scoreMap: Record<string, number> = {
-  // Tensions
-  frequent: 1,
-  occasional: 2,
-  none: 3,
-  // Respect, Openness
-  low: 1,
-  medium: 2,
-  high: 3,
-  // Communication
-  "very-limited": 1,
-  limited: 2,
-  frequent: 3,
-};
-
-export default function FacilitatorAnalysis() {
-  const { sessions, evaluations } = useEvaluationData();
+	  // Tensions
+	  frequent: 1,
+	  occasional: 2,
+	  none: 3,
+	  // Respect, Openness
+	  low: 1,
+	  medium: 2,
+	  high: 3,
+	  // Communication
+	  "very-limited": 1,
+	  limited: 2,
+	  "frequent-comm": 3, // Renamed to avoid conflict with 'frequent' in Tensions
+	};
+	
+	export default function FacilitatorAnalysis() {
+	  const { sessions, evaluations } = useEvaluationData();
 
   const facilitatorData = useMemo(() => {
     const data: Record<string, {
@@ -64,10 +64,11 @@ export default function FacilitatorAnalysis() {
           data[facilitator].totalOpennessScore += scoreMap[evaluation.openness] || 0;
         }
 
-        // Communication Score (using before)
-        if (evaluation.phase === 'before') {
-          data[facilitator].totalCommunicationScore += scoreMap[evaluation.communication] || 0;
-        }
+	        // Communication Score (using before)
+	        if (evaluation.phase === 'before') {
+	          const commKey = evaluation.communication === 'frequent' ? 'frequent-comm' : evaluation.communication;
+	          data[facilitator].totalCommunicationScore += scoreMap[commKey] || 0;
+	        }
       });
     });
 
