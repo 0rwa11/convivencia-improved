@@ -1,5 +1,4 @@
 import { Toaster } from "@/components/ui/sonner";
-import { Toaster as ToastProvider } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
@@ -64,7 +63,6 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <ToastProvider />
           <DashboardLayout>
             <Router />
           </DashboardLayout>

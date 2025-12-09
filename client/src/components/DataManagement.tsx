@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Upload, FileText, FileJson } from "lucide-react";
 import { useEvaluationData } from "@/hooks/useEvaluationData";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export default function DataManagement() {
   const { exportAsCSV, exportAsJSON, importFromJSON } = useEvaluationData();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
 
